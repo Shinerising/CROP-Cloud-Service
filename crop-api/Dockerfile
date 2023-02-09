@@ -3,12 +3,11 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
-ARG src="CROP API.csproj"
-COPY ${src} ./crop-api/
-RUN dotnet restore "CROP API.csproj"
+COPY *.csproj ./crop-api/
+RUN dotnet restore ./crop-api/
 
 # copy everything else and build app
-COPY * ./crop-api/
+COPY . ./crop-api/
 WORKDIR /source/crop-api
 RUN dotnet publish -c release -o /crop-api-app --no-restore
 
