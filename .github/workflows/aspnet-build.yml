@@ -5,14 +5,20 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
     
 jobs:
   docker:
+  
+    strategy:
+      matrix:
+        project: [ crop-api ]
+        
     runs-on: ubuntu-latest
+    
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ matrix.project }}
+  
     permissions:
       contents: read
       packages: write
@@ -37,7 +43,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./crop-api
+          context: ./${{ matrix.project }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
