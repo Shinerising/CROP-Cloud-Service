@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
-COPY *.csproj ./crop-api/
-RUN dotnet restore
+COPY "CROP API.csproj" ./crop-api/
+RUN dotnet restore "CROP API.csproj"
 
 # copy everything else and build app
 COPY * ./crop-api/
