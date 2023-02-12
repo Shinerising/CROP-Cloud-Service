@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace CROP.API.Controllers
 {
+    /// <summary>
+    /// Controller for graph data.
+    /// </summary>
     [ApiController]
     [Authorize]
     [Route("[controller]")]
@@ -29,6 +32,10 @@ namespace CROP.API.Controllers
             return result == null || result.Count == 0 ? NotFound() : Ok(result.Last());
         }
 
+        /// <summary>
+        /// Gets all graph data.
+        /// </summary>
+        /// <param name="station">The station to get the data for.</param>
         [HttpGet("/graph/all", Name = "GetAllGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<List<GraphData>>> GetAll([FromQuery(Name = "station")] string station)
@@ -37,6 +44,9 @@ namespace CROP.API.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        /// <summary>
+        /// Inserts a new graph data.
+        /// </summary>
         [HttpPut("/graph", Name = "PutGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)

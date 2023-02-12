@@ -9,6 +9,6 @@ namespace CROP.API.Data
         public PostgresDbContext(DbContextOptions<PostgresDbContext> options) : base(options)
         {
         }
-        public DbSet<UserData> Users { get; set; }
+        public DbSet<UserData> Users { get; set; } = null!;
     }
 }

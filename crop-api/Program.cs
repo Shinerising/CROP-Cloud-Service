@@ -1,22 +1,20 @@
 using CROP.API.Data;
 using CROP.API.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Redis.OM;
-using System.Text;
 using static CROP.API.Services.RedisService;
 
 namespace CROP.API
 {
-    public class Program
+  public class Program
     {
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        /// <param name="args">The command-line arguments.</param>
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
-            //builder.WebHost.UseUrls(new string[] { builder.Configuration["Url:Http"] ?? "", builder.Configuration["Url:Https"] ?? "" });
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
