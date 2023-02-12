@@ -12,6 +12,9 @@ using System.Text;
 
 namespace CROP.API.Controllers
 {
+    /// <summary>
+    /// Controller for security.
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class SecurityController : ControllerBase
@@ -63,5 +66,8 @@ namespace CROP.API.Controllers
         }
     }
     
+    /// <summary>
+    /// The user input.
+    /// </summary>
     public record TokenData(string Token, DateTime ExpiredTime);
 }
