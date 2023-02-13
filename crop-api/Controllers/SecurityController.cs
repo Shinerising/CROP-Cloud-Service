@@ -1,6 +1,7 @@
 ﻿using CROP.API.Data;
 using CROP.API.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +16,9 @@ namespace CROP.API.Controllers
     /// <summary>
     /// Controller for security.
     /// </summary>
+    [Authorize]
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class SecurityController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -37,6 +39,7 @@ namespace CROP.API.Controllers
         /// Creates a new token.
         /// </summary>
         /// <param name="user">The user to create the token for.</param>
+        [AllowAnonymous]
         [HttpPost("/security/login", Name = "CreateToken")]
         public ActionResult<TokenData> Get([FromBody] UserInput user)
         {
@@ -65,7 +68,7 @@ namespace CROP.API.Controllers
                         new Claim(JwtRegisteredClaimNames.Email, result.UserName),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                     }),
-                Expires = DateTime.UtcNow.AddMinutes(30),
+                Expires = DateTime.UtcNow.AddMinutes(60),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
@@ -74,6 +77,13 @@ namespace CROP.API.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var jwtToken = tokenHandler.WriteToken(token);
             return Ok(new TokenData(jwtToken, token.ValidTo));
+        }
+
+        [Authorize]
+        [HttpOptions("/security/touch", Name = "Touch")]
+        public ActionResult Touch()
+        {
+            return Ok();
         }
     }
     

@@ -6,7 +6,7 @@ using static CROP.API.Services.RedisService;
 
 namespace CROP.API
 {
-  public class Program
+    public static class Program
     {
         /// <summary>
         /// The main entry point for the application.

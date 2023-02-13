@@ -15,7 +15,7 @@ namespace CROP.API.Models
         public DateTime CreateTime { get; set; } = DateTime.MinValue;
         public DateTime UpdateTime { get; set; } = DateTime.MinValue;
         public DateTime SaveTime { get; set; } = DateTime.UtcNow;
-        public string StationId { get; set; } = "";
+        public string Station { get; set; } = "";
         public FileAction Action { get; set; } = FileAction.Upload;
     }
 }

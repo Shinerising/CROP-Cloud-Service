@@ -11,16 +11,14 @@ namespace CROP.API.Controllers
     /// <summary>
     /// Controller for graph data.
     /// </summary>
-    [ApiController]
     [Authorize]
-    [Route("[controller]")]
+    [ApiController]
+    [Route("api/[controller]")]
     public class GraphController : ControllerBase
     {
         private readonly RedisCollection<GraphData> _graph;
-        private readonly RedisConnectionProvider _provider;
         public GraphController(RedisConnectionProvider provider)
         {
-            _provider = provider;
             _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
         }
 

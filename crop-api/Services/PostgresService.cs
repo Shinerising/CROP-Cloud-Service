@@ -12,13 +12,13 @@ namespace CROP.API.Services
             using var scope = app.Services.CreateScope();
             var dbInitializer = scope.ServiceProvider.GetRequiredService<DbInitializer>();
             var context = scope.ServiceProvider.GetRequiredService<PostgresDbContext>();
-            DbInitializer.Initialize(context);
+            dbInitializer.Initialize(context);
         }
     }
 
     public class DbInitializer
     {
-        public static void Initialize(PostgresDbContext dbContext)
+        public void Initialize(PostgresDbContext dbContext)
         {
             dbContext.Database.EnsureCreated();
             var users = LoadData<List<UserData>>("./Seeding/user.json");
