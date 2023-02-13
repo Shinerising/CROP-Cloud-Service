@@ -20,16 +20,23 @@ namespace CROP.API.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="FileController"/> class.
         /// </summary>
-        /// <param name="configuration"></param>
-        /// <param name="context"></param>
+        /// <param name="configuration">The configuration.</param>
+        /// <param name="context">The context.</param>
         public FileController(IConfiguration configuration, PostgresDbContext context)
         {
             _configuration = configuration;
             _context = context;
         }
 
+        /// <summary>
+        /// Uploads a file.
+        /// </summary>
+        /// <param name="station">The station to upload the file for.</param>
+        /// <param name="file">The file to upload.</param>
+        /// <param name="createTime">The creation time of the file.</param>
+        /// <param name="updateTime">The update time of the file.</param>
         [HttpPost]
-        [Route("file/upload")]
+        [Route("file/upload", Name = "UploadFile")]
         [Authorize]
         public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromForm] FormFile file, [FromForm] DateTime createTime, [FromForm] DateTime updateTime)
         {
@@ -68,8 +75,14 @@ namespace CROP.API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Get file information.
+        /// </summary>
+        /// <param name="id">The id of the file.</param>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="filename">The name of the file.</param>
         [HttpGet]
-        [Route("file/get")]
+        [Route("file/get", Name = "GetFile")]
         [Authorize]
         public ActionResult<FileRecord> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "filename")] string? filename)
         {
@@ -77,8 +90,12 @@ namespace CROP.API.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        /// <summary>
+        /// Get file list.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
         [HttpGet]
-        [Route("file/list")]
+        [Route("file/list", Name = "GetFileList")]
         [Authorize]
         public ActionResult<List<FileRecord>> GetFileList([FromQuery(Name = "station")] string station)
         {
@@ -91,9 +108,13 @@ namespace CROP.API.Controllers
             return result == null || result.Count == 0 ? NotFound() : Ok(result);
         }
 
-
+        /// <summary>
+        /// Download a file.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="filename">The name of the file.</param>
         [HttpGet]
-        [Route("file/download")]
+        [Route("file/download", Name = "DownloadFile")]
         [Authorize]
         public ActionResult DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "filename")] string filename)
         {

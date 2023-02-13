@@ -40,7 +40,6 @@ services:
     volumes:
       - .:/app
     environment:
-      - DJANGO_SETTINGS_MODULE=my_project.settings
       - DATABASE_URL=postgres://postgres:postgres@postgresql:5432/postgres
       - REDIS_URL=redis://redis-stack:6379/0
       - SECRET_KEY=secret

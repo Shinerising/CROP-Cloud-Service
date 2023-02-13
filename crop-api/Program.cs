@@ -15,14 +15,16 @@ namespace CROP.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            builder.Configuration.AddEnvironmentVariables();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerJwtSupport();
 
-            builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration["Redis:Connection"] ?? "redis://localhost"));
+            builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration[Env.RedisConnection] ?? builder.Configuration["Redis:Connection"] ?? "redis://localhost"));
             builder.Services.AddHostedService<IndexCreationService>();
-            builder.Services.AddDbContext<PostgresDbContext>(options => options.UseNpgsql(builder.Configuration["PostgreSQL:Connection"]));
+            builder.Services.AddDbContext<PostgresDbContext>(options => options.UseNpgsql(builder.Configuration[Env.PostgresConnection] ?? builder.Configuration["PostgreSQL:Connection"]));
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
             builder.Services.AddAuthorization();
