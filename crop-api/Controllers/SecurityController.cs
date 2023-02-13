@@ -21,11 +21,22 @@ namespace CROP.API.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly PostgresDbContext _context;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityController"/> class.
+        /// </summary>
+        /// <param name="configuration">The configuration.</param>
+        /// <param name="context">The context.</param>
         public SecurityController(IConfiguration configuration, PostgresDbContext context)
         {
             _configuration = configuration;
             _context = context;
         }
+
+        /// <summary>
+        /// Creates a new token.
+        /// </summary>
+        /// <param name="user">The user to create the token for.</param>
         [HttpPost("/security/login", Name = "CreateToken")]
         public ActionResult<TokenData> Get([FromBody] UserInput user)
         {
