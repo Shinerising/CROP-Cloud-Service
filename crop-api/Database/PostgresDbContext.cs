@@ -10,5 +10,6 @@ namespace CROP.API.Data
         {
         }
         public DbSet<UserData> Users { get; set; } = null!;
+        public DbSet<FileRecord> FileRecords { get; set; } = null!;
     }
 }
