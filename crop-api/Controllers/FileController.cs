@@ -11,7 +11,7 @@ namespace CROP.API.Controllers
     /// </summary>
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     public class FileController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -32,13 +32,14 @@ namespace CROP.API.Controllers
         /// Uploads a file.
         /// </summary>
         /// <param name="station">The station to upload the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
         /// <param name="file">The file to upload.</param>
         /// <param name="createTime">The creation time of the file.</param>
         /// <param name="updateTime">The update time of the file.</param>
         [HttpPost]
         [Route("file/upload", Name = "UploadFile")]
         [Authorize]
-        public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromForm] FormFile file, [FromForm] DateTime createTime, [FromForm] DateTime updateTime)
+        public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromForm] FormFile file, [FromForm] DateTime createTime, [FromForm] DateTime updateTime)
         {
             if (file == null || file.Length == 0)
             {
@@ -56,7 +57,8 @@ namespace CROP.API.Controllers
                 CreateTime = createTime,
                 UpdateTime = updateTime,
                 SaveTime = DateTime.UtcNow,
-                Station = station
+                Station = station,
+                Tag = tag
             };
 
             var tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -64,7 +66,8 @@ namespace CROP.API.Controllers
             using var stream = System.IO.File.Create(tempFile);
             await file.CopyToAsync(stream);
 
-            var targetFile = Path.Combine(_configuration["File:Database"] ?? "", "Database", station, file.FileName);
+            var targetFile = Path.Combine(_configuration["File:Database"] ?? "", station, tag, file.FileName);
+            System.IO.Directory.CreateDirectory(Path.Combine(_configuration["File:Database"] ?? "", station, tag));
             System.IO.File.Move(tempFile, targetFile);
             System.IO.File.SetCreationTimeUtc(tempFile, createTime);
             System.IO.File.SetLastWriteTimeUtc(tempFile, updateTime);
@@ -80,13 +83,14 @@ namespace CROP.API.Controllers
         /// </summary>
         /// <param name="id">The id of the file.</param>
         /// <param name="station">The station to download the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
         /// <param name="filename">The name of the file.</param>
         [HttpGet]
         [Route("file/get", Name = "GetFile")]
         [Authorize]
-        public ActionResult<FileRecord> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "filename")] string? filename)
+        public ActionResult<FileRecord> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string? filename)
         {
-            var result = id == null ? _context.FileRecords.First(item => item.Station == station && item.FileName == filename) : _context.FileRecords.First(item => item.Id == id);
+            var result = id == null ? _context.FileRecords.First(item => item.Station == station && item.Tag == tag && item.FileName == filename) : _context.FileRecords.First(item => item.Id == id);
             return result == null ? NotFound() : Ok(result);
         }
 
@@ -94,17 +98,37 @@ namespace CROP.API.Controllers
         /// Get file list.
         /// </summary>
         /// <param name="station">The station to download the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
         [HttpGet]
         [Route("file/list", Name = "GetFileList")]
         [Authorize]
-        public ActionResult<List<FileRecord>> GetFileList([FromQuery(Name = "station")] string station)
+        public ActionResult<List<FileRecord>> GetFileList([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag)
         {
             if (string.IsNullOrEmpty(station))
             {
                 return BadRequest();
             }
 
-            var result = _context.FileRecords.Where(item => item.Station == station).ToList();
+            var result = _context.FileRecords.Where(item => item.Station == station && item.Tag == tag).ToList();
+            return result == null || result.Count == 0 ? NotFound() : Ok(result);
+        }
+
+        /// <summary>
+        /// Get tag list.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
+        [HttpGet]
+        [Route("file/tags", Name = "GetTagList")]
+        [Authorize]
+        public ActionResult<List<string>> GetTagList([FromQuery(Name = "station")] string station)
+        {
+            if (string.IsNullOrEmpty(station))
+            {
+                return BadRequest();
+            }
+
+            var result = _context.FileRecords.Where(item => item.Station == station).Select(item => item.Tag).Distinct().ToList();
+            result = result.Concat(new string[] { "Alarm", "Record" }).Distinct().ToList();
             return result == null || result.Count == 0 ? NotFound() : Ok(result);
         }
 
@@ -113,12 +137,13 @@ namespace CROP.API.Controllers
         /// </summary>
         /// <param name="station">The station to download the file for.</param>
         /// <param name="filename">The name of the file.</param>
+        /// <param name="tag">The tag of the file.</param>
         [HttpGet]
         [Route("file/download", Name = "DownloadFile")]
         [Authorize]
-        public ActionResult DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "filename")] string filename)
+        public ActionResult DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
-            var targetFile = Path.Combine(_configuration["File:Database"] ?? "", "Database", station, filename);
+            var targetFile = Path.Combine(_configuration["File:Database"] ?? "", station, tag, filename);
 
             if (System.IO.File.Exists(targetFile))
             {

@@ -18,7 +18,7 @@ namespace CROP.API.Controllers
     /// </summary>
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     public class SecurityController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -40,7 +40,7 @@ namespace CROP.API.Controllers
         /// </summary>
         /// <param name="user">The user to create the token for.</param>
         [AllowAnonymous]
-        [HttpPost("/security/login", Name = "CreateToken")]
+        [HttpPost("security/login", Name = "CreateToken")]
         public ActionResult<TokenData> Get([FromBody] UserInput user)
         {
             var result = _context.Users.First(_user => user.UserName == _user.UserName);
@@ -80,7 +80,7 @@ namespace CROP.API.Controllers
         }
 
         [Authorize]
-        [HttpOptions("/security/touch", Name = "Touch")]
+        [HttpPost("security/touch", Name = "Touch")]
         public ActionResult Touch()
         {
             return Ok();

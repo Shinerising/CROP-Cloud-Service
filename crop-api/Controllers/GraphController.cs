@@ -13,7 +13,7 @@ namespace CROP.API.Controllers
     /// </summary>
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     public class GraphController : ControllerBase
     {
         private readonly RedisCollection<GraphData> _graph;
@@ -22,7 +22,7 @@ namespace CROP.API.Controllers
             _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
         }
 
-        [HttpGet("/graph", Name = "GetGraph")]
+        [HttpGet("graph", Name = "GetGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<GraphData>> Get([FromQuery(Name = "station")] string station)
         {
@@ -34,7 +34,7 @@ namespace CROP.API.Controllers
         /// Gets all graph data.
         /// </summary>
         /// <param name="station">The station to get the data for.</param>
-        [HttpGet("/graph/all", Name = "GetAllGraph")]
+        [HttpGet("graph/all", Name = "GetAllGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<List<GraphData>>> GetAll([FromQuery(Name = "station")] string station)
         {
@@ -45,7 +45,7 @@ namespace CROP.API.Controllers
         /// <summary>
         /// Inserts a new graph data.
         /// </summary>
-        [HttpPut("/graph", Name = "PutGraph")]
+        [HttpPost("graph", Name = "PutGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)
         {
