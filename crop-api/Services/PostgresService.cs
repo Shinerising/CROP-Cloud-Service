@@ -2,6 +2,8 @@
 using CROP.API.Models;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
+using static System.Collections.Specialized.BitVector32;
+using System.Xml.Linq;
 
 namespace CROP.API.Services
 {
@@ -31,6 +33,16 @@ namespace CROP.API.Services
                     _ = dbContext.Users.Any(_user => _user.Id == user.Id) ? dbContext.Users.Update(user) : dbContext.Users.Add(user);
                 }
             }
+
+            if (!dbContext.TagRecords.Any(tag => tag.Station == "test" && tag.Name == "Alarm"))
+            {
+                dbContext.TagRecords.Add(new TagRecord { Station = "test", Name = "Alarm" });
+            }
+            if (!dbContext.TagRecords.Any(tag => tag.Station == "test" && tag.Name == "Record"))
+            {
+                dbContext.TagRecords.Add(new TagRecord { Station = "test", Name = "Record" });
+            }
+
             dbContext.SaveChanges();
         }
         public static T? LoadData<T>(string filename)

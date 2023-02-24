@@ -2,6 +2,8 @@ using CROP.API.Data;
 using CROP.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Security.Claims;
 
 namespace CROP.API.Controllers
@@ -28,23 +30,23 @@ namespace CROP.API.Controllers
             _context = context;
         }
 
-        /// <summary>
-        /// Uploads a file.
-        /// </summary>
-        /// <param name="station">The station to upload the file for.</param>
-        /// <param name="tag">The tag of the file.</param>
-        /// <param name="file">The file to upload.</param>
-        /// <param name="createTime">The creation time of the file.</param>
-        /// <param name="updateTime">The update time of the file.</param>
         [HttpPost]
         [Route("file/upload", Name = "UploadFile")]
         [Authorize]
-        public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromForm] FormFile file, [FromForm] DateTime createTime, [FromForm] DateTime updateTime)
+        [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
+        public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "createTime")] DateTime createTime, [FromQuery(Name = "updateTime")] DateTime updateTime)
         {
-            if (file == null || file.Length == 0)
+            if (Request.Form.Files == null || Request.Form.Files.Count == 0)
             {
                 return BadRequest();
             }
+
+            if (!_context.TagRecords.Any(item => item.Station == station && item.Name == tag))
+            {
+                return Forbid();
+            }
+
+            var file = Request.Form.Files[0];
 
             var fileRecord = new FileRecord
             {
@@ -54,8 +56,8 @@ namespace CROP.API.Controllers
                 FileSize = (int)file.Length,
                 ContentType = file.ContentType,
                 Action = FileRecord.FileAction.Upload,
-                CreateTime = createTime,
-                UpdateTime = updateTime,
+                CreateTime = DateTime.SpecifyKind(createTime, DateTimeKind.Utc),
+                UpdateTime = DateTime.SpecifyKind(updateTime, DateTimeKind.Utc),
                 SaveTime = DateTime.UtcNow,
                 Station = station,
                 Tag = tag
@@ -63,16 +65,28 @@ namespace CROP.API.Controllers
 
             var tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
-            using var stream = System.IO.File.Create(tempFile);
-            await file.CopyToAsync(stream);
+            using (var stream = System.IO.File.Create(tempFile))
+            {
+                await file.CopyToAsync(stream);
+            }
 
             var targetFile = Path.Combine(_configuration["File:Database"] ?? "", station, tag, file.FileName);
-            System.IO.Directory.CreateDirectory(Path.Combine(_configuration["File:Database"] ?? "", station, tag));
-            System.IO.File.Move(tempFile, targetFile);
-            System.IO.File.SetCreationTimeUtc(tempFile, createTime);
-            System.IO.File.SetLastWriteTimeUtc(tempFile, updateTime);
+            Directory.CreateDirectory(Path.Combine(_configuration["File:Database"] ?? "", station, tag));
+            System.IO.File.Move(tempFile, targetFile, true);
+            System.IO.File.SetCreationTimeUtc(targetFile, createTime);
+            System.IO.File.SetLastWriteTimeUtc(targetFile, updateTime);
 
-            _context.FileRecords.Add(fileRecord);
+            if (_context.FileRecords.Any(_file => _file.Station == station && _file.Tag == tag && _file.FileName == file.FileName))
+            {
+                var _file = _context.FileRecords.First(_file => _file.Station == station && _file.Tag == tag && _file.FileName == file.FileName);
+                fileRecord.Id = _file.Id;
+                _context.FileRecords.Update(fileRecord);
+            }
+            else
+            {
+                _context.FileRecords.Add(fileRecord);
+            }
+
             _context.SaveChanges();
 
             return Ok();
@@ -91,7 +105,20 @@ namespace CROP.API.Controllers
         public ActionResult<FileRecord> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string? filename)
         {
             var result = id == null ? _context.FileRecords.First(item => item.Station == station && item.Tag == tag && item.FileName == filename) : _context.FileRecords.First(item => item.Id == id);
-            return result == null ? NotFound() : Ok(result);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            var target = Path.Combine(_configuration["File:Database"] ?? "", result.Station, result.Tag, result.FileName);
+            if (System.IO.File.Exists(target))
+            {
+                return Ok(result);
+            }
+            else
+            {
+                _context.FileRecords.Remove(result);
+                return NotFound();
+            }
         }
 
         /// <summary>
@@ -109,8 +136,31 @@ namespace CROP.API.Controllers
                 return BadRequest();
             }
 
+            if (!_context.TagRecords.Any(item => item.Station == station && item.Name == tag))
+            {
+                return NotFound();
+            }
+
             var result = _context.FileRecords.Where(item => item.Station == station && item.Tag == tag).ToList();
-            return result == null || result.Count == 0 ? NotFound() : Ok(result);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            var list = new List<FileRecord>();
+            foreach (var file in result)
+            {
+                var target = Path.Combine(_configuration["File:Database"] ?? "", file.Station, file.Tag, file.FileName);
+                if (System.IO.File.Exists(target))
+                {
+                    list.Add(file);
+                }
+                else
+                {
+                    _context.FileRecords.Remove(file);
+                }
+            }
+            return Ok(list);
         }
 
         /// <summary>
@@ -120,15 +170,14 @@ namespace CROP.API.Controllers
         [HttpGet]
         [Route("file/tags", Name = "GetTagList")]
         [Authorize]
-        public ActionResult<List<string>> GetTagList([FromQuery(Name = "station")] string station)
+        public ActionResult<List<TagRecord>> GetTagList([FromQuery(Name = "station")] string station)
         {
             if (string.IsNullOrEmpty(station))
             {
                 return BadRequest();
             }
 
-            var result = _context.FileRecords.Where(item => item.Station == station).Select(item => item.Tag).Distinct().ToList();
-            result = result.Concat(new string[] { "Alarm", "Record" }).Distinct().ToList();
+            var result = _context.TagRecords.Where(item => item.Station == station).ToList();
             return result == null || result.Count == 0 ? NotFound() : Ok(result);
         }
 
