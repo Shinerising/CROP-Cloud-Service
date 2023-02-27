@@ -34,7 +34,7 @@ namespace CROP.API.Controllers
         [Route("file/upload", Name = "UploadFile")]
         [Authorize]
         [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
-        public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "createTime")] DateTime createTime, [FromQuery(Name = "updateTime")] DateTime updateTime)
+        public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "createTime")] DateTime createTime, [FromQuery(Name = "updateTime")] DateTime updateTime, [FromQuery(Name = "fileName")] string? fileName, [FromQuery(Name = "fileSize")] int? fileSize)
         {
             if (Request.Form.Files == null || Request.Form.Files.Count == 0)
             {
@@ -47,13 +47,14 @@ namespace CROP.API.Controllers
             }
 
             var file = Request.Form.Files[0];
+            fileName ??= file.FileName;
 
             var fileRecord = new FileRecord
             {
                 Id = 0,
                 UserId = int.Parse(User.FindFirstValue("Id") ?? "0"),
-                FileName = file.FileName,
-                FileSize = (int)file.Length,
+                FileName = fileName,
+                FileSize = fileSize ?? (int)file.Length,
                 ContentType = file.ContentType,
                 Action = FileRecord.FileAction.Upload,
                 CreateTime = DateTime.SpecifyKind(createTime, DateTimeKind.Utc),
@@ -70,15 +71,15 @@ namespace CROP.API.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var targetFile = Path.Combine(_configuration["File:Database"] ?? "", station, tag, file.FileName);
-            Directory.CreateDirectory(Path.Combine(_configuration["File:Database"] ?? "", station, tag));
+            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, fileName);
+            Directory.CreateDirectory(Path.Combine(_configuration["Storage:File"] ?? "", station, tag));
             System.IO.File.Move(tempFile, targetFile, true);
             System.IO.File.SetCreationTimeUtc(targetFile, createTime);
             System.IO.File.SetLastWriteTimeUtc(targetFile, updateTime);
 
-            if (_context.FileRecords.Any(_file => _file.Station == station && _file.Tag == tag && _file.FileName == file.FileName))
+            if (_context.FileRecords.Any(_file => _file.Station == station && _file.Tag == tag && _file.FileName == fileName))
             {
-                var _file = _context.FileRecords.First(_file => _file.Station == station && _file.Tag == tag && _file.FileName == file.FileName);
+                var _file = _context.FileRecords.First(_file => _file.Station == station && _file.Tag == tag && _file.FileName == fileName);
                 fileRecord.Id = _file.Id;
                 _context.FileRecords.Update(fileRecord);
             }
@@ -109,7 +110,7 @@ namespace CROP.API.Controllers
             {
                 return NotFound();
             }
-            var target = Path.Combine(_configuration["File:Database"] ?? "", result.Station, result.Tag, result.FileName);
+            var target = Path.Combine(_configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
             if (System.IO.File.Exists(target))
             {
                 return Ok(result);
@@ -150,7 +151,7 @@ namespace CROP.API.Controllers
             var list = new List<FileRecord>();
             foreach (var file in result)
             {
-                var target = Path.Combine(_configuration["File:Database"] ?? "", file.Station, file.Tag, file.FileName);
+                var target = Path.Combine(_configuration["Storage:File"] ?? "", file.Station, file.Tag, file.FileName);
                 if (System.IO.File.Exists(target))
                 {
                     list.Add(file);
@@ -192,7 +193,7 @@ namespace CROP.API.Controllers
         [Authorize]
         public ActionResult DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
-            var targetFile = Path.Combine(_configuration["File:Database"] ?? "", station, tag, filename);
+            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, filename);
 
             if (System.IO.File.Exists(targetFile))
             {
