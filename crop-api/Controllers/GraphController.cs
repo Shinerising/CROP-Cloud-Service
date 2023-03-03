@@ -1,13 +1,10 @@
 ﻿using CROP.API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Redis.OM.Searching;
-using Redis.OM;
-using StackExchange.Redis;
-using System;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Redis.OM;
+using Redis.OM.Searching;
 
-namespace CROP.API.Controllers
-{
+namespace CROP.API.Controllers {
     /// <summary>
     /// Controller for graph data.
     /// </summary>
@@ -26,8 +23,8 @@ namespace CROP.API.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<GraphData>> Get([FromQuery(Name = "station")] string station)
         {
-            var result = await _graph.Where(item => item.Station == station).ToListAsync();
-            return result == null || result.Count == 0 ? NotFound() : Ok(result.Last());
+            var result = await _graph.Where(item => item.Station == station).OrderByDescending(item => item.Time).FirstAsync();
+            return result == null ? NotFound() : Ok(result);
         }
 
         /// <summary>
