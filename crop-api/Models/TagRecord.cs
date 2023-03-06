@@ -1,8 +1,7 @@
 ﻿using Redis.OM.Modeling;
 using System.ComponentModel.DataAnnotations;
 
-namespace CROP.API.Models
-{
+namespace CROP.API.Models {
     public class TagRecord
     {
         [Key]

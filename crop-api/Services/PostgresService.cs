@@ -34,13 +34,20 @@ namespace CROP.API.Services
                 }
             }
 
-            if (!dbContext.TagRecords.Any(tag => tag.Station == "test" && tag.Name == "Alarm"))
-            {
-                dbContext.TagRecords.Add(new TagRecord { Station = "test", Name = "Alarm" });
-            }
-            if (!dbContext.TagRecords.Any(tag => tag.Station == "test" && tag.Name == "Record"))
-            {
-                dbContext.TagRecords.Add(new TagRecord { Station = "test", Name = "Record" });
+            var stations = LoadData<List<StationInfo>>("./Seeding/station.json");
+            if (stations != null) {
+                foreach (var station in stations) {
+                    if (!dbContext.Stations.Any(_station => _station.Name == station.Name)) {
+                        dbContext.Stations.Add(station);
+                    }
+
+                    if (!dbContext.TagRecords.Any(tag => tag.Station == station.Name && tag.Name == "Alarm")) {
+                        dbContext.TagRecords.Add(new TagRecord { Station = station.Name, Name = "Alarm" });
+                    }
+                    if (!dbContext.TagRecords.Any(tag => tag.Station == station.Name && tag.Name == "Record")) {
+                        dbContext.TagRecords.Add(new TagRecord { Station = station.Name, Name = "Record" });
+                    }
+                }
             }
 
             dbContext.SaveChanges();

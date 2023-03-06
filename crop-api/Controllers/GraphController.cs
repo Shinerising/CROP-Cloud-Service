@@ -1,6 +1,8 @@
-﻿using CROP.API.Models;
+﻿using CROP.API.Data;
+using CROP.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using Redis.OM.Searching;
 
@@ -14,9 +16,11 @@ namespace CROP.API.Controllers {
     public class GraphController : ControllerBase
     {
         private readonly RedisCollection<GraphData> _graph;
-        public GraphController(RedisConnectionProvider provider)
+        private readonly PostgresDbContext _context;
+        public GraphController(RedisConnectionProvider provider, PostgresDbContext context)
         {
             _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
+            _context = context;
         }
 
         [HttpGet("graph", Name = "GetGraph")]
@@ -46,6 +50,9 @@ namespace CROP.API.Controllers {
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)
         {
+            if (!_context.Stations.Any(_station => _station.Name == data.Station)) {
+                return Forbid();
+            }
             await _graph.InsertAsync(data, TimeSpan.FromSeconds(3600));
             return Ok();
         }

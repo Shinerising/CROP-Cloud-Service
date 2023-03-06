@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Security.Claims;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CROP.API.Controllers
 {
@@ -39,6 +40,10 @@ namespace CROP.API.Controllers
             if (Request.Form.Files == null || Request.Form.Files.Count == 0)
             {
                 return BadRequest();
+            }
+
+            if (!_context.Stations.Any(_station => _station.Name == station)) {
+                return Forbid();
             }
 
             if (!_context.TagRecords.Any(item => item.Station == station && item.Name == tag))
