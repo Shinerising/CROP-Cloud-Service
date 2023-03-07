@@ -16,3 +16,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /crop-api-app
 COPY --from=build /crop-api-app ./
 ENTRYPOINT ["dotnet", "CROP API.dll"]
+
+# add ports
+EXPOSE 5182
+
+# add volumes
+VOLUME [ "/storage", "/logs", "/seeding" ]
+
+# add environment variables
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://localhost:5182
+ENV DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
+ENV REDIS_URL=redis://redis:6379
+ENV SECRET_KEY=secret
