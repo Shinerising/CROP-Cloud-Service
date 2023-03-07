@@ -3,9 +3,8 @@ using CROP.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Security.Claims;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using FileSystem = System.IO.File;
 
 namespace CROP.API.Controllers
 {
@@ -17,7 +16,13 @@ namespace CROP.API.Controllers
     [Route("api")]
     public class FileController : ControllerBase
     {
+        /// <summary>
+        /// The configuration.
+        /// </summary>
         private readonly IConfiguration _configuration;
+        /// <summary>
+        /// The database context.
+        /// </summary>
         private readonly PostgresDbContext _context;
 
         /// <summary>
@@ -66,17 +71,17 @@ namespace CROP.API.Controllers
 
             var tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
-            using (var stream = System.IO.File.Create(tempFile))
+            using (var stream = FileSystem.Create(tempFile))
             {
                 await file.CopyToAsync(stream);
             }
 
             var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, fileName);
             Directory.CreateDirectory(Path.Combine(_configuration["Storage:File"] ?? "", station, tag));
-            System.IO.File.Move(tempFile, targetFile, true);
-            System.IO.File.SetCreationTimeUtc(targetFile, createTime);
-            System.IO.File.SetLastWriteTimeUtc(targetFile, updateTime);
-            System.IO.File.Delete(tempFile);
+            FileSystem.Move(tempFile, targetFile, true);
+            FileSystem.SetCreationTimeUtc(targetFile, createTime);
+            FileSystem.SetLastWriteTimeUtc(targetFile, updateTime);
+            FileSystem.Delete(tempFile);
 
             var fileRecord = new FileRecord
             {
@@ -127,7 +132,7 @@ namespace CROP.API.Controllers
                 return NotFound();
             }
             var target = Path.Combine(_configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
-            if (System.IO.File.Exists(target))
+            if (FileSystem.Exists(target))
             {
                 return Ok(result);
             }
@@ -169,7 +174,7 @@ namespace CROP.API.Controllers
             foreach (var file in result)
             {
                 var target = Path.Combine(_configuration["Storage:File"] ?? "", file.Station, file.Tag, file.FileName);
-                if (System.IO.File.Exists(target))
+                if (FileSystem.Exists(target))
                 {
                     list.Add(file);
                 }
@@ -213,9 +218,40 @@ namespace CROP.API.Controllers
         {
             var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, filename);
 
-            if (System.IO.File.Exists(targetFile))
+            if (FileSystem.Exists(targetFile))
             {
-                return File(System.IO.File.OpenRead(targetFile), "application/octet-stream", Path.GetFileName(targetFile));
+                return File(FileSystem.OpenRead(targetFile), "application/octet-stream", Path.GetFileName(targetFile));
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        /// <summary>
+        /// Delete a file.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="filename">The name of the file.</param>
+        /// <param name="tag">The tag of the file.</param>
+        [HttpPost]
+        [Route("file/delete", Name = "DeleteFile")]
+        [Authorize]
+        public async Task<ActionResult> DeleteFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
+        {
+            var result = await _context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename);
+            if (result != null)
+            {
+                _context.FileRecords.Remove(result);
+                _context.SaveChanges();
+            }
+
+            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, filename);
+
+            if (FileSystem.Exists(targetFile))
+            {
+                FileSystem.Delete(targetFile);
+                return Ok();
             }
             else
             {

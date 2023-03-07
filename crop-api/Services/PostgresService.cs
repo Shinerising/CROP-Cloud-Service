@@ -23,6 +23,7 @@ namespace CROP.API.Services
         public void Initialize(PostgresDbContext dbContext)
         {
             dbContext.Database.EnsureCreated();
+
             var users = LoadData<List<UserData>>("./Seeding/user.json");
             if (users != null)
             {
