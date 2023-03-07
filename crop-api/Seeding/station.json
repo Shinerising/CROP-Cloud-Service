@@ -1,10 +1,19 @@
 [
   {
+    "Name": "test",
+    "FullName": "æµ‹è¯•ç«™åœº",
+    "Section": "",
+    "Group": "",
+    "City": "",
+    "Longitude": 0,
+    "Latitude": 0
+  },
+  {
     "Name": "HYB",
-    "FullName": "ºâÑô±±ÍÕ·å",
-    "Section": "ºâÑôµçÎñ¶Î",
-    "Group": "ÎäººÌúÂ·¾Ö",
-    "City": "ºâÑô",
+    "FullName": "è¡¡é˜³åŒ—é©¼å³°",
+    "Section": "è¡¡é˜³ç”µåŠ¡æ®µ",
+    "Group": "æ­¦æ±‰é“è·¯å±€",
+    "City": "è¡¡é˜³",
     "Longitude": 112.620209,
     "Latitude": 26.894765
   }
