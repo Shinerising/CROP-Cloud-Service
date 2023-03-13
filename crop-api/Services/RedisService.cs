@@ -18,6 +18,7 @@ namespace CROP.API.Services
             public async Task StartAsync(CancellationToken cancellationToken)
             {
                 await _provider.Connection.CreateIndexAsync(typeof(GraphData));
+                await _provider.Connection.CreateIndexAsync(typeof(GraphDataRealTime));
             }
 
             public Task StopAsync(CancellationToken cancellationToken)

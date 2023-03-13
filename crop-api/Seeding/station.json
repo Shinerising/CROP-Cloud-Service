@@ -5,6 +5,7 @@
     "Section": "",
     "Group": "",
     "City": "",
+    "Description": "",
     "Longitude": 0,
     "Latitude": 0
   },
@@ -14,6 +15,7 @@
     "Section": "衡阳电务段",
     "Group": "武汉铁路局",
     "City": "衡阳",
+    "Description": "",
     "Longitude": 112.620209,
     "Latitude": 26.894765
   }

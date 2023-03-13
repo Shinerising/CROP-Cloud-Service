@@ -3,8 +3,9 @@
 namespace CROP.API.Models
 {
     [Document(StorageType = StorageType.Json)]
-    public class GraphData
+    public class GraphDataRealTime
     {
+        [RedisIdField]
         [Indexed]
         public string Station { get; set; } = "";
         public string Version { get; set; } = "";
