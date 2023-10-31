@@ -2,6 +2,7 @@
 using CROP.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using Redis.OM.Searching;
 using static System.Collections.Specialized.BitVector32;
@@ -17,11 +18,13 @@ namespace CROP.API.Controllers {
     public class GraphController : ControllerBase
     {
         private readonly RedisCollection<GraphData> _graph;
+        private readonly PostgresDbContext _context;
         private readonly RedisCollection<GraphDataRealTime> _graphRealTime;
-        public GraphController(RedisConnectionProvider provider)
+        public GraphController(RedisConnectionProvider provider, PostgresDbContext context)
         {
             _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
             _graphRealTime = (RedisCollection<GraphDataRealTime>)provider.RedisCollection<GraphDataRealTime>();
+            _context = context;
         }
 
         [HttpGet("graph", Name = "GetGraph")]
@@ -55,6 +58,11 @@ namespace CROP.API.Controllers {
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)
         {
+            if (!_context.Stations.Any(_station => _station.Id == data.Station))
+            {
+                return Forbid();
+            }
+
             await _graph.InsertAsync(data, TimeSpan.FromSeconds(3600));
 
             if (await _graphRealTime.AnyAsync(item => item.Station == data.Station))
