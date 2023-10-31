@@ -15,4 +15,10 @@ RUN dotnet publish -c release -o /crop-api-app --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /crop-api-app
 COPY --from=build /crop-api-app ./
+
+EXPOSE 5182
+
+ENV DATABASE_URL="Server=localhost;Port=5432;Database=db_crop;User Id=crop;Password=crop;"
+ENV REDIS_URL="redis://localhost:6379"
+
 ENTRYPOINT ["dotnet", "CROP API.dll"]

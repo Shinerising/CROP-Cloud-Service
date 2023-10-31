@@ -50,7 +50,7 @@ namespace CROP.API.Controllers {
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)
         {
-            if (!_context.Stations.Any(_station => _station.Name == data.Station)) {
+            if (!_context.Stations.Any(_station => _station.Id == data.Station)) {
                 return Forbid();
             }
             await _graph.InsertAsync(data, TimeSpan.FromSeconds(3600));

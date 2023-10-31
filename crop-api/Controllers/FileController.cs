@@ -42,7 +42,7 @@ namespace CROP.API.Controllers
                 return BadRequest();
             }
 
-            if (!_context.Stations.Any(_station => _station.Name == station)) {
+            if (!_context.Stations.Any(_station => _station.Id == station)) {
                 return Forbid();
             }
 

@@ -40,8 +40,6 @@ namespace CROP.API
                 app.UseSwaggerUI();
             }
 
-            //app.UseHttpsRedirection();
-
             app.UseAuthentication();
             app.UseAuthorization();
 
