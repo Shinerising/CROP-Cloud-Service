@@ -24,7 +24,6 @@ namespace CROP.API
 
             builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration[Env.RedisConnection] ?? builder.Configuration["Redis:Connection"] ?? "redis://localhost"));
             builder.Services.AddHostedService<IndexCreationService>();
-            var a = builder.Configuration[Env.PostgresConnection] ?? builder.Configuration["PostgreSQL:Connection"];
             builder.Services.AddDbContext<PostgresDbContext>(options => options.UseNpgsql(builder.Configuration[Env.PostgresConnection] ?? builder.Configuration["PostgreSQL:Connection"]));
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
