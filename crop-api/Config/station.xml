@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <stations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <station id="hyb" name="衡阳北" fullname="衡阳北驼峰" section="衡阳电务段" group="武汉铁路局" city="衡阳" long="112.620209" lat="26.894765" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+  <station id="test" name="衡阳北" fullname="衡阳北驼峰" section="衡阳电务段" group="武汉铁路局" city="衡阳" long="112.620209" lat="26.894765" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
 </stations>

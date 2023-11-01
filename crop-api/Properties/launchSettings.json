@@ -17,10 +17,12 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DATABASE_URL": "Server=localhost;Port=5432;Database=db_crop;User Id=crop;Password=crop;",
+        "REDIS_URL": "redis://localhost:6379"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:7211;http://localhost:5182"
+      "applicationUrl": "https://localhost:7212;http://localhost:5182"
     },
     "IIS Express": {
       "commandName": "IISExpress",
