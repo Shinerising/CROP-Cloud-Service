@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using Redis.OM.Searching;
+using System.Buffers.Text;
+using System.IO.Compression;
 using static System.Collections.Specialized.BitVector32;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -12,7 +14,6 @@ namespace CROP.API.Controllers {
     /// <summary>
     /// Controller for graph data.
     /// </summary>
-    [Authorize]
     [ApiController]
     [Route("api")]
     public class GraphController : ControllerBase
@@ -97,6 +98,36 @@ namespace CROP.API.Controllers {
                 await _graphRealTime.DeleteAsync(await _graphRealTime.FirstAsync(item => item.Station == station));
             }
             return Ok();
+        }
+
+        [HttpGet("graph/simple", Name = "GetGraphDecompressed")]
+        public async Task<ActionResult<GraphData>> GetGraphDecompressed([FromQuery(Name = "station")] string station)
+        {
+            if (Request.Headers["CROP-PATH"] != "graph/simple")
+            {
+                return Forbid();
+            }
+
+            if (!await _graphRealTime.AnyAsync(item => item.Station == station))
+            {
+                return NotFound();
+            }
+
+            var result = await _graphRealTime.FirstAsync(item => item.Station == station);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            byte[] buffer = Convert.FromBase64String(result.Data);
+            int dataLength = (buffer[6] << 8) + buffer[5];
+
+            using MemoryStream outputStream = new();
+            using MemoryStream inputStream = new(buffer, 9, dataLength);
+            using DeflateStream deflateStream = new(inputStream, CompressionMode.Decompress);
+            deflateStream.CopyTo(outputStream);
+            result.Data = Convert.ToBase64String(outputStream.ToArray());
+            return Ok(result);
         }
     }
 }
