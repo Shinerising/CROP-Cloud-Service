@@ -37,9 +37,13 @@ namespace CROP.API.Services
 
             var stations = LoadXmlData<List<StationInfo>>("stations", "./Config/station.xml");
             if (stations != null) {
-                foreach (var station in stations) {
+                foreach (var station in stations.Where(station => !station.IsDisabled)) {
                     if (!dbContext.Stations.Any(_station => _station.Id == station.Id)) {
                         dbContext.Stations.Add(station);
+                    }
+                    else
+                    {
+                        dbContext.Stations.Update(station);
                     }
 
                     if (!dbContext.TagRecords.Any(tag => tag.Station == station.Id && tag.Name == "Alarm")) {

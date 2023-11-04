@@ -48,5 +48,8 @@ namespace CROP.API.Models
         [AllowNull]
         [XmlAttribute("graph")]
         public string GraphPath { get; set; } = "";
+
+        [XmlAttribute("disable")]
+        public bool IsDisabled { get; set; }
     }
 }
