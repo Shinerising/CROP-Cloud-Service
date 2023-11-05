@@ -101,7 +101,7 @@ namespace CROP.API.Controllers {
         }
 
         [HttpGet("graph/simple", Name = "GetGraphDecompressed")]
-        public async Task<ActionResult<GraphData>> GetGraphDecompressed([FromQuery(Name = "station")] string station)
+        public async Task<ActionResult<string>> GetGraphDecompressed([FromQuery(Name = "station")] string station)
         {
             if (Request.Headers["CROP-PATH"] != "graph/simple")
             {
@@ -119,15 +119,9 @@ namespace CROP.API.Controllers {
                 return NotFound();
             }
 
-            byte[] buffer = Convert.FromBase64String(result.Data);
-            int dataLength = (buffer[6] << 8) + buffer[5];
+            string text = $"{result.Time.ToUnixTimeSeconds}\n{result.Data}";
 
-            using MemoryStream outputStream = new();
-            using MemoryStream inputStream = new(buffer, 9, dataLength);
-            using DeflateStream deflateStream = new(inputStream, CompressionMode.Decompress);
-            deflateStream.CopyTo(outputStream);
-            result.Data = Convert.ToBase64String(outputStream.ToArray());
-            return Ok(result);
+            return Ok(text);
         }
     }
 }
