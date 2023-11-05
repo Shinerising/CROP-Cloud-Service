@@ -119,7 +119,7 @@ namespace CROP.API.Controllers {
                 return NotFound();
             }
 
-            string text = $"{result.Time.ToUnixTimeSeconds}\n{result.Data}";
+            string text = $"{result.Time.ToUnixTimeSeconds()}\n{result.Data}";
 
             return Ok(text);
         }
