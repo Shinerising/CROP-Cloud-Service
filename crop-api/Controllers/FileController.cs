@@ -214,9 +214,15 @@ namespace CROP.API.Controllers
         [HttpGet]
         [Route("file/download", Name = "DownloadFile")]
         [Authorize]
-        public ActionResult DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
+        public async Task<ActionResult> DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
-            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, filename);
+            var result = await _context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
 
             if (FileSystem.Exists(targetFile))
             {
@@ -224,6 +230,8 @@ namespace CROP.API.Controllers
             }
             else
             {
+                _context.FileRecords.Remove(result);
+                await _context.SaveChangesAsync();
                 return NotFound();
             }
         }
@@ -240,13 +248,14 @@ namespace CROP.API.Controllers
         public async Task<ActionResult> DeleteFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
             var result = await _context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename);
-            if (result != null)
+            if (result == null)
             {
-                _context.FileRecords.Remove(result);
-                _context.SaveChanges();
+                return NotFound();
             }
+            _context.FileRecords.Remove(result);
+            _context.SaveChanges();
 
-            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, filename);
+            var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
 
             if (FileSystem.Exists(targetFile))
             {
@@ -255,6 +264,8 @@ namespace CROP.API.Controllers
             }
             else
             {
+                _context.FileRecords.Remove(result);
+                await _context.SaveChangesAsync();
                 return NotFound();
             }
         }
