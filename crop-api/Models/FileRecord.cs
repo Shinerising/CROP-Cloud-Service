@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace CROP.API.Models
 {
     /// <summary>
     /// 日志文件存储记录
     /// </summary>
+    [Index(nameof(Station), nameof(Tag))]
     public class FileRecord
     {
         /// <summary>

@@ -15,6 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Spatial" Version="7.18.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.1" />
     <PackageReference Include="Redis.OM" Version="0.4.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
@@ -43,10 +44,6 @@
     <None Update="Config\user.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="StatsModels\" />
   </ItemGroup>
 
 </Project>
