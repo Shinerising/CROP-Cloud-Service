@@ -3,6 +3,8 @@ using CROP.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO.Compression;
+using System.IO;
 using System.Security.Claims;
 using FileSystem = System.IO.File;
 
@@ -78,10 +80,15 @@ namespace CROP.API.Controllers
 
             var targetFile = Path.Combine(_configuration["Storage:File"] ?? "", station, tag, fileName);
             Directory.CreateDirectory(Path.Combine(_configuration["Storage:File"] ?? "", station, tag));
-            FileSystem.Move(tempFile, targetFile, true);
+
+            using FileStream originalFileStream = new(tempFile, FileMode.Open);
+            using FileStream decompressedFileStream = FileSystem.Create(targetFile);
+            using GZipStream decompressionStream = new(originalFileStream, CompressionMode.Decompress);
+            decompressionStream.CopyTo(decompressedFileStream);
+            FileSystem.Delete(tempFile);
+
             FileSystem.SetCreationTimeUtc(targetFile, createTime);
             FileSystem.SetLastWriteTimeUtc(targetFile, updateTime);
-            FileSystem.Delete(tempFile);
 
             var fileRecord = new FileRecord
             {
@@ -226,7 +233,14 @@ namespace CROP.API.Controllers
 
             if (FileSystem.Exists(targetFile))
             {
-                return File(FileSystem.OpenRead(targetFile), "application/octet-stream", Path.GetFileName(targetFile));
+                var tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                using FileStream originalFileStream = new(targetFile, FileMode.Open);
+                using FileStream compressedFileStream = FileSystem.Create(tempFile);
+                using GZipStream compressionStream = new(compressedFileStream, CompressionMode.Compress);
+                originalFileStream.CopyTo(compressionStream);
+                var fs = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
+
+                return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
             }
             else
             {
