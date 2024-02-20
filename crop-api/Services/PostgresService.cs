@@ -1,9 +1,6 @@
 ﻿using CROP.API.Data;
 using CROP.API.Models;
 using Microsoft.AspNetCore.Identity;
-using Newtonsoft.Json;
-using static System.Collections.Specialized.BitVector32;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace CROP.API.Services
@@ -63,11 +60,9 @@ namespace CROP.API.Services
             {
                 if (File.Exists(filename))
                 {
-                    using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
-                    {
-                        var serializer = new XmlSerializer(typeof(T), new XmlRootAttribute(root));
-                        return (T?)serializer.Deserialize(stream);
-                    }
+                    using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+                    var serializer = new XmlSerializer(typeof(T), new XmlRootAttribute(root));
+                    return (T?)serializer.Deserialize(stream);
                 }
             }
             catch

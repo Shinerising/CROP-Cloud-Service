@@ -15,20 +15,13 @@ namespace CROP.API.Controllers {
     /// Controller for graph data.
     /// </summary>
     [ApiController]
-    [Route("api")]
-    public class GraphController : ControllerBase
+    [Route("api/graph")]
+    public class GraphController(RedisConnectionProvider provider, PostgresDbContext context) : ControllerBase
     {
-        private readonly RedisCollection<GraphData> _graph;
-        private readonly PostgresDbContext _context;
-        private readonly RedisCollection<GraphDataRealTime> _graphRealTime;
-        public GraphController(RedisConnectionProvider provider, PostgresDbContext context)
-        {
-            _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
-            _graphRealTime = (RedisCollection<GraphDataRealTime>)provider.RedisCollection<GraphDataRealTime>();
-            _context = context;
-        }
+        private readonly RedisCollection<GraphData> _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
+        private readonly RedisCollection<GraphDataRealTime> _graphRealTime = (RedisCollection<GraphDataRealTime>)provider.RedisCollection<GraphDataRealTime>();
 
-        [HttpGet("graph", Name = "GetGraph")]
+        [HttpGet("", Name = "GetGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<GraphData>> Get([FromQuery(Name = "station")] string station)
         {
@@ -44,7 +37,7 @@ namespace CROP.API.Controllers {
         /// Gets all graph data.
         /// </summary>
         /// <param name="station">The station to get the data for.</param>
-        [HttpGet("graph/all", Name = "GetAllGraph")]
+        [HttpGet("all", Name = "GetAllGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<List<GraphData>>> GetAll([FromQuery(Name = "station")] string station)
         {
@@ -55,11 +48,11 @@ namespace CROP.API.Controllers {
         /// <summary>
         /// Inserts a new graph data.
         /// </summary>
-        [HttpPost("graph", Name = "PutGraph")]
+        [HttpPost("", Name = "PutGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)
         {
-            if (!_context.Stations.Any(_station => _station.Id == data.Station))
+            if (!context.Stations.Any(_station => _station.Id == data.Station))
             {
                 return Forbid();
             }
@@ -89,7 +82,7 @@ namespace CROP.API.Controllers {
             return Ok();
         }
 
-        [HttpDelete("graph", Name = "DeleteGraph")]
+        [HttpDelete("", Name = "DeleteGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Delete([FromQuery(Name = "station")] string station)
         {
@@ -100,7 +93,7 @@ namespace CROP.API.Controllers {
             return Ok();
         }
 
-        [HttpGet("graph/simple", Name = "GetGraphDecompressed")]
+        [HttpGet("simple", Name = "GetGraphDecompressed")]
         public async Task<ActionResult<string>> GetGraphDecompressed([FromQuery(Name = "station")] string station)
         {
             if (Request.Headers["CROP-PATH"] != "graph/simple")

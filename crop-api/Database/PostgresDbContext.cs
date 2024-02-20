@@ -4,11 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CROP.API.Data
 {
-    public class PostgresDbContext : DbContext
+    public class PostgresDbContext(DbContextOptions<PostgresDbContext> options) : DbContext(options)
     {
-        public PostgresDbContext(DbContextOptions<PostgresDbContext> options) : base(options)
-        {
-        }
         public DbSet<UserData> Users { get; set; } = null!;
         public DbSet<FileRecord> FileRecords { get; set; } = null!;
         public DbSet<TagRecord> TagRecords { get; set; } = null!;

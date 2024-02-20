@@ -16,34 +16,26 @@ namespace CROP.API.Controllers
     /// <summary>
     /// Controller for security.
     /// </summary>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="SecurityController"/> class.
+    /// </remarks>
+    /// <param name="configuration">The configuration.</param>
+    /// <param name="context">The context.</param>
     [Authorize]
     [ApiController]
-    [Route("api")]
-    public class SecurityController : ControllerBase
+    [Route("api/security")]
+    public class SecurityController(IConfiguration configuration, PostgresDbContext context) : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly PostgresDbContext _context;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityController"/> class.
-        /// </summary>
-        /// <param name="configuration">The configuration.</param>
-        /// <param name="context">The context.</param>
-        public SecurityController(IConfiguration configuration, PostgresDbContext context)
-        {
-            _configuration = configuration;
-            _context = context;
-        }
 
         /// <summary>
         /// Creates a new token.
         /// </summary>
         /// <param name="user">The user to create the token for.</param>
         [AllowAnonymous]
-        [HttpPost("security/login", Name = "CreateToken")]
+        [HttpPost("login", Name = "CreateToken")]
         public async Task<ActionResult<TokenData>> Login([FromBody] UserInput user)
         {
-            var result = await _context.Users.FirstAsync(_user => user.UserName == _user.UserName);
+            var result = await context.Users.FirstAsync(_user => user.UserName == _user.UserName);
             if (result == null)
             {
                 return Unauthorized();
@@ -55,19 +47,19 @@ namespace CROP.API.Controllers
                 return Unauthorized();
             }
 
-            var issuer = _configuration["Jwt:Issuer"];
-            var audience = _configuration["Jwt:Audience"];
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "");
+            var issuer = configuration["Jwt:Issuer"];
+            var audience = configuration["Jwt:Audience"];
+            var key = Encoding.ASCII.GetBytes(configuration["Jwt:Key"] ?? "");
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
+                Subject = new ClaimsIdentity(
+                    [
                         new Claim("Id", result.Id.ToString()),
                         new Claim(ClaimTypes.Role, result.Role),
                         new Claim(JwtRegisteredClaimNames.Sub, result.UserName),
                         new Claim(JwtRegisteredClaimNames.Email, result.UserName),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                    }),
+                    ]),
                 Expires = DateTime.UtcNow.AddMinutes(60),
                 Issuer = issuer,
                 Audience = audience,
@@ -80,7 +72,7 @@ namespace CROP.API.Controllers
         }
 
         [Authorize]
-        [HttpPost("security/touch", Name = "Touch")]
+        [HttpPost("touch", Name = "Touch")]
         public ActionResult Touch()
         {
             return Ok();
