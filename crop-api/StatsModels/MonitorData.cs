@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CROP.API.Data
 {
-    [Table("Analysis_Shift")]
+    [Table("Analysis_Monitor")]
     [Index(nameof(StationId))]
-    public record ShiftData(string StationId, string ShiftName, DateTimeOffset ShiftTime, string FileName, int PlanCount, int CutCount, int CarCount, int WeightSum, int[] WeightDist)
+    public record MonitorData(string StationId, string DeviceId, string DeviceType, string Name, string Direction, string Front, string Rear_Normal, string Rear_Reverse, string Length, string FrontLength)
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

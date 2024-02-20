@@ -1,19 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CROP.API.Models
+namespace CROP.API.Data
 {
-    public class StationData
+    [Table("Analysis_Station")]
+    [Index(nameof(StationId))]
+    public record StationData(string StationId, string Name, string FullName, string Section, string Group, string City, string Description, double Longitude, double Latitude)
     {
-        public string Id { get; set; } = "";
-        [Required]
-        public string Name { get; set; } = "";
-        public string FullName { get; set; } = "";
-        public string Section { get; set; } = "";
-        public string Group { get; set; } = "";
-        public string City { get; set; } = "";
-        public string Description { get; set; } = "";
-        public double Longitude { get; set; } = 0;
-        public double Latitude { get; set; } = 0;
-        public int DeviceCount { get; set; } = 0;
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public string? PrimaryId { get; set; }
+        public string GraphName { get; set; } = "";
+        public int MapWidth { get; set; }
+        public int MapHeight { get; set; }
+        public int MapDirection { get; set; }
+        public int Count { get; set; }
+        public int Level { get; set; }
     }
 }
