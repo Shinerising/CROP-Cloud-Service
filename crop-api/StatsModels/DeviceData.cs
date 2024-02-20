@@ -2,6 +2,7 @@
 using NpgsqlTypes;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace CROP.API.Models
 {
@@ -11,6 +12,7 @@ namespace CROP.API.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [JsonIgnore]
         public string? PrimaryId { get; set; }
         public string StationId { get; set; } = "";
         public int Id { get; set; }

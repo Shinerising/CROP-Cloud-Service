@@ -1,6 +1,7 @@
 ﻿using Redis.OM.Modeling;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace CROP.API.Models
@@ -38,18 +39,23 @@ namespace CROP.API.Models
         public double Latitude { get; set; } = 0;
         [AllowNull]
         [XmlAttribute("record")]
+        [JsonIgnore]
         public string RecordPath { get; set; } = "";
         [AllowNull]
         [XmlAttribute("alarm")]
+        [JsonIgnore]
         public string AlarmPath { get; set; } = "";
         [AllowNull]
         [XmlAttribute("monitor")]
+        [JsonIgnore]
         public string MonitorPath { get; set; } = "";
         [AllowNull]
         [XmlAttribute("graph")]
+        [JsonIgnore]
         public string GraphPath { get; set; } = "";
 
         [XmlAttribute("disable")]
+        [JsonIgnore]
         public bool IsDisabled { get; set; }
     }
 }

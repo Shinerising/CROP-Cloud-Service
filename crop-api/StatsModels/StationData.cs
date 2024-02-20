@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace CROP.API.Data
 {
@@ -10,6 +11,7 @@ namespace CROP.API.Data
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [JsonIgnore]
         public string? PrimaryId { get; set; }
         public string GraphName { get; set; } = "";
         public int MapWidth { get; set; }
