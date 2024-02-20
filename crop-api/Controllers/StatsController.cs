@@ -54,5 +54,16 @@ namespace CROP.API.Controllers
             var result = await context.DeviceDatas.Where(item => item.StationId == station).ToListAsync();
             return result == null ? NotFound() : Ok(result);
         }
+
+        [HttpGet("sytem", Name = "GetSystemStatus")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<SystemStatus>> GetSystemStatus()
+        {
+            double cpu = 0;
+            double ram = 0;
+            double disk = 0;
+            double network = 0;
+            return Ok(new SystemStatus(cpu, ram, disk, network));
+        }
     }
 }

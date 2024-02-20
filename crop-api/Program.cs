@@ -8,6 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
 
+if (builder.Configuration[Env.CORS]?.ToUpper() == "TRUE")
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        });
+    });
+}
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerJwtSupport();
@@ -31,6 +42,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (builder.Configuration[Env.CORS]?.ToUpper() == "TRUE")
+{
+    app.UseCors();
+}
 
 app.MapControllers();
 

@@ -7,7 +7,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DATABASE_URL": "Server=nas.home;Port=15432;Database=db_crop;User Id=crop;Password=crop;",
-        "REDIS_URL": "redis://nas.home:6379"
+        "REDIS_URL": "redis://nas.home:6379",
+        "CORS_URL": "true"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5182"
