@@ -1,5 +1,6 @@
 ﻿using CROP.API.Data;
 using CROP.API.Models;
+using CROP.API.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -55,14 +56,26 @@ namespace CROP.API.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        [HttpGet("monitor", Name = "GetMonitorList")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<DeviceData>>> GetMonitorList([FromQuery(Name = "station")] string station)
+        {
+            if (!await context.MonitorDatas.AnyAsync(item => item.StationId == station))
+            {
+                return NotFound();
+            }
+            var result = await context.MonitorDatas.Where(item => item.StationId == station).ToListAsync();
+            return result == null ? NotFound() : Ok(result);
+        }
+
         [HttpGet("sytem", Name = "GetSystemStatus")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SystemStatus>> GetSystemStatus()
         {
-            double cpu = 0;
-            double ram = 0;
-            double disk = 0;
-            double network = 0;
+            _ = double.TryParse(await Utils.ExecuteCommand("vmstat | sed -n 3p | awk '{ print 100-$15 }'"), out double cpu);
+            _ = double.TryParse(await Utils.ExecuteCommand("free | sed -n 2p | awk '{ print $3/$2*100 }'"), out double ram);
+            _ = double.TryParse(await Utils.ExecuteCommand("df | sed -n 2p | awk '{ print $3/$2*100 }'"), out double disk);
+            _ = double.TryParse(await Utils.ExecuteCommand("ifstat 0.1 1 | sed -n 3p | awk '{ print ($1+$2)/10240 }'"), out double network);
             return Ok(new SystemStatus(cpu, ram, disk, network));
         }
     }

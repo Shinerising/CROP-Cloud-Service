@@ -1,5 +1,6 @@
 using CROP.API.Data;
 using CROP.API.Services;
+using CROP.API.Utility;
 using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using static CROP.API.Services.RedisService;
