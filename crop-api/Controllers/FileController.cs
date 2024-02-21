@@ -180,6 +180,49 @@ namespace CROP.API.Controllers
         }
 
         /// <summary>
+        /// Get file list.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
+        [HttpGet]
+        [Route("file/list/filter", Name = "GetFileListFilter")]
+        [Authorize]
+        public async Task<ActionResult<List<FileRecord>>> GetFileListFilter([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        {
+            if (string.IsNullOrEmpty(station))
+            {
+                return BadRequest();
+            }
+
+            if (!await context.TagRecords.AnyAsync(item => item.Station == station && item.Name == tag))
+            {
+                return NotFound();
+            }
+
+            var result = await context.FileRecords.Where(item => item.Station == station && item.Tag == tag && item.CreateTime >= startTime && item.CreateTime <= endTime).ToListAsync();
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            var list = new List<FileRecord>();
+            foreach (var file in result)
+            {
+                var target = Path.Combine(configuration["Storage:File"] ?? "", file.Station, file.Tag, file.FileName);
+                if (FileSystem.Exists(target))
+                {
+                    list.Add(file);
+                }
+                else
+                {
+                    context.FileRecords.Remove(file);
+                }
+            }
+            await context.SaveChangesAsync();
+            return Ok(list);
+        }
+
+        /// <summary>
         /// Get tag list.
         /// </summary>
         /// <param name="station">The station to download the file for.</param>
