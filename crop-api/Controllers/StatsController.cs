@@ -28,6 +28,7 @@ namespace CROP.API.Controllers
             {
                 return NotFound();
             }
+            //Response.Headers.Append("Cache-Control", "public, max-age=3600");
             var result = await context.Stations.ToListAsync();
             return result == null ? NotFound() : Ok(result);
         }
@@ -68,7 +69,55 @@ namespace CROP.API.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
-        [HttpGet("sytem", Name = "GetSystemStatus")]
+        [HttpGet("shift/sum", Name = "GetShiftSum")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<DeviceData>>> GetShiftSum([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        {
+            if (station != null && !await context.ShiftDatas.AnyAsync(item => item.StationId == station))
+            {
+                return NotFound();
+            }
+
+            var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
+            var planCount = await data.SumAsync(item => item.PlanCount);
+            var CutCount = await data.SumAsync(item => item.CutCount);
+            var CarCount = await data.SumAsync(item => item.CarCount);
+            var WeightSum = await data.SumAsync(item => item.WeightSum);
+            var result = new ShiftSum(station, startTime, endTime, planCount, CutCount, CarCount, WeightSum);
+            return Ok(result);
+        }
+
+        [HttpGet("shift/dist", Name = "GetShiftDist")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<DeviceData>>> GetShiftDist([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        {
+            if (station != null && !await context.ShiftDatas.AnyAsync(item => item.StationId == station))
+            {
+                return NotFound();
+            }
+
+            var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
+            var list = await data.Select(item => new ShiftSum(null, item.ShiftTime, item.ShiftTime, item.PlanCount, item.CutCount, item.CarCount, item.WeightSum)).ToListAsync();
+            var result = new ShiftDist(station, startTime, endTime, list);
+            return Ok(result);
+        }
+
+        [HttpGet("shift/list", Name = "GetShiftList")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<DeviceData>>> GetShiftList([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        {
+            if (station != null && !await context.ShiftDatas.AnyAsync(item => item.StationId == station))
+            {
+                return NotFound();
+            }
+
+            var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
+            var list = await data.ToListAsync();
+            var result = new ShiftList(station, startTime, endTime, list);
+            return Ok(result);
+        }
+
+        [HttpGet("system", Name = "GetSystemStatus")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SystemStatus>> GetSystemStatus()
         {

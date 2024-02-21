@@ -16,9 +16,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /crop-api-app
 COPY --from=build /crop-api-app ./
 
-# Install vmstat, ifstat, free
+# install vmstat, ifstat, free
 RUN apt-get update && apt-get install -y procps ifstat
 
+# add entrypoint
 ENTRYPOINT ["dotnet", "CROP API.dll"]
 
 # add ports
