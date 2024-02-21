@@ -16,8 +16,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /crop-api-app
 COPY --from=build /crop-api-app ./
 
-ENV DATABASE_URL="Server=localhost;Port=5432;Database=db_crop;User Id=crop;Password=crop;"
-ENV REDIS_URL="redis://localhost:6379"
+# Install vmstat, ifstat, free
+RUN apt-get update && apt-get install -y procps ifstat
 
 ENTRYPOINT ["dotnet", "CROP API.dll"]
 
