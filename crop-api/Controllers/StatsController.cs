@@ -109,9 +109,9 @@ namespace CROP.API.Controllers
             if (Utils.IsWindows)
             {
                 _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average; Write-Host $CompObject.Average"), out double cpu);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject -Class WIN32_OperatingSystem; Write-Host ((($CompObject.TotalVisibleMemorySize-$CompObject.FreePhysicalMemory)*100)/$CompObject.TotalVisibleMemorySize)"), out double ram);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject -Class Win32_LogicalDisk; Write-Host (($CompObject[0].size-$CompObject[0].freespace)*100/$CompObject[0].size)"), out double disk);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject -Class Win32_PerfFormattedData_Tcpip_NetworkInterface -filter 'BytesTotalPersec>0'; Write-Host ($CompObject.BytesTotalPerSec*800/$CompObject.CurrentBandwidth)"), out double network);
+                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject WIN32_OperatingSystem; Write-Host ((($CompObject.TotalVisibleMemorySize-$CompObject.FreePhysicalMemory)*100)/$CompObject.TotalVisibleMemorySize)"), out double ram);
+                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_LogicalDisk; Write-Host (($CompObject[0].size-$CompObject[0].freespace)*100/$CompObject[0].size)"), out double disk);
+                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_PerfFormattedData_Tcpip_NetworkInterface -filter 'BytesTotalPersec>0'; Write-Host ($CompObject.BytesTotalPerSec*800/$CompObject.CurrentBandwidth)"), out double network);
                 return Ok(new SystemStatus(cpu, ram, disk, network));
             }
             else
