@@ -108,10 +108,10 @@ namespace CROP.API.Controllers
         {
             if (Utils.IsWindows)
             {
-                _ = double.TryParse(await Utils.ExecuteCommand("wmic cpu get loadpercentage | Select-Object -Skip 1"), out double cpu);
+                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average; Write-Host $CompObject.Average"), out double cpu);
                 _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject -Class WIN32_OperatingSystem; Write-Host ((($CompObject.TotalVisibleMemorySize-$CompObject.FreePhysicalMemory)*100)/$CompObject.TotalVisibleMemorySize)"), out double ram);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-CimInstance -Class Win32_LogicalDisk; Write-Host (($CompObject[0].size-$CompObject[0].freespace)*100 / $CompObject[0].size)"), out double disk);
-                _ = double.TryParse(await Utils.ExecuteCommand("(Get-CimInstance -Query \"Select BytesTotalPersec from Win32_PerfFormattedData_Tcpip_NetworkInterface\" | Select-Object BytesTotalPerSec).BytesTotalPerSec[0] / 10000000"), out double network);
+                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject -Class Win32_LogicalDisk; Write-Host (($CompObject[0].size-$CompObject[0].freespace)*100/$CompObject[0].size)"), out double disk);
+                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject -Class Win32_PerfFormattedData_Tcpip_NetworkInterface -filter 'BytesTotalPersec>0'; Write-Host ($CompObject.BytesTotalPerSec*800/$CompObject.CurrentBandwidth)"), out double network);
                 return Ok(new SystemStatus(cpu, ram, disk, network));
             }
             else
@@ -119,7 +119,7 @@ namespace CROP.API.Controllers
                 _ = double.TryParse(await Utils.ExecuteCommand("vmstat | sed -n 3p | awk '{ print 100-$15 }'"), out double cpu);
                 _ = double.TryParse(await Utils.ExecuteCommand("free | sed -n 2p | awk '{ print $3/$2*100 }'"), out double ram);
                 _ = double.TryParse(await Utils.ExecuteCommand("df | sed -n 2p | awk '{ print $3/$2*100 }'"), out double disk);
-                _ = double.TryParse(await Utils.ExecuteCommand("ifstat 0.1 1 | sed -n 3p | awk '{ print ($1+$2)/10000 }'"), out double network);
+                _ = double.TryParse(await Utils.ExecuteCommand("ifstat 0.1 1 | sed -n 3p | awk '{ print ($1+$2)*800/1000000 }'"), out double network);
                 return Ok(new SystemStatus(cpu, ram, disk, network));
             }
         }
