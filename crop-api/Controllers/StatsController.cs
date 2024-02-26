@@ -123,5 +123,21 @@ namespace CROP.API.Controllers
                 return Ok(new SystemStatus(cpu, ram, disk, network));
             }
         }
+
+        [HttpGet("report", Name = "GetSystemReport")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<SystemReport>> GetSystemReport()
+        {
+            if (Utils.IsWindows)
+            {
+                string systemreport = await Utils.ExecuteCommand("systeminfo");
+                return Ok(new SystemReport(systemreport));
+            }
+            else
+            {
+                string systemreport = await Utils.ExecuteCommand("lshw");
+                return Ok(new SystemReport(systemreport));
+            }
+        }
     }
 }
