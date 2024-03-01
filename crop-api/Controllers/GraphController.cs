@@ -5,13 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using Redis.OM.Searching;
-using System.Buffers.Text;
 using System.IO.Compression;
 using System.Text;
-using static System.Collections.Specialized.BitVector32;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace CROP.API.Controllers {
+namespace CROP.API.Controllers
+{
     /// <summary>
     /// Controller for graph data.
     /// </summary>
@@ -191,7 +189,21 @@ namespace CROP.API.Controllers {
                 return NotFound();
             }
 
-            string text = $"{result.Time.ToUnixTimeSeconds()}\n{result.Data}";
+            byte[]? buffer = Convert.FromBase64String(result.Data);
+            int length = (buffer[6] << 8) + buffer[5] - 2;
+            int offset = 9;
+
+            buffer = await DecompressData(buffer, offset, length);
+            if (buffer == null)
+            {
+                return Forbid();
+            }
+
+            var graphLength = BitConverter.ToUInt16(buffer, 0);
+            var graphBuffer = new byte[graphLength];
+            Buffer.BlockCopy(buffer, 2, graphBuffer, 0, graphLength);
+
+            string text = $"{result.Time.ToUnixTimeSeconds()}\n{Convert.ToBase64String(graphBuffer)}";
 
             return Ok(text);
         }
