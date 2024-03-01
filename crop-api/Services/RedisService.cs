@@ -7,18 +7,15 @@ namespace CROP.API.Services
 {
     public static class RedisService
     {
-        public class IndexCreationService : IHostedService
+        public class IndexCreationService(RedisConnectionProvider provider) : IHostedService
         {
-            private readonly RedisConnectionProvider _provider;
-            public IndexCreationService(RedisConnectionProvider provider)
-            {
-                _provider = provider;
-            }
+            private readonly RedisConnectionProvider _provider = provider;
 
             public async Task StartAsync(CancellationToken cancellationToken)
             {
                 await _provider.Connection.CreateIndexAsync(typeof(GraphData));
                 await _provider.Connection.CreateIndexAsync(typeof(GraphDataRealTime));
+                await _provider.Connection.CreateIndexAsync(typeof(AlarmData));
             }
 
             public Task StopAsync(CancellationToken cancellationToken)

@@ -7,6 +7,7 @@ using Redis.OM;
 using Redis.OM.Searching;
 using System.Buffers.Text;
 using System.IO.Compression;
+using System.Text;
 using static System.Collections.Specialized.BitVector32;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -20,6 +21,7 @@ namespace CROP.API.Controllers {
     {
         private readonly RedisCollection<GraphData> _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
         private readonly RedisCollection<GraphDataRealTime> _graphRealTime = (RedisCollection<GraphDataRealTime>)provider.RedisCollection<GraphDataRealTime>();
+        private readonly RedisCollection<AlarmData> _alarm = (RedisCollection<AlarmData>)provider.RedisCollection<AlarmData>();
 
         [HttpGet("", Name = "GetGraph")]
         [Authorize(Roles = "Administrator")]
@@ -43,6 +45,26 @@ namespace CROP.API.Controllers {
         {
             var result = await _graph.Where(item => item.Station == station).ToListAsync();
             return result == null ? NotFound() : Ok(result);
+        }
+
+        /// <summary>
+        /// Gets alarm data.
+        /// </summary>
+        /// <param name="station">The station to get the data for.</param>
+        [HttpGet("alarm", Name = "GetAlarmData")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<AlarmData>>> GetAlarm([FromQuery(Name = "station")] string? station)
+        {
+            if (station == null)
+            {
+                var result = await _alarm.Where(item => item.Station == station).OrderBy(item => item.Time).TakeLast(200).ToListAsync();
+                return result == null ? NotFound() : Ok(result);
+            }
+            else
+            {
+                var result = await _alarm.OrderBy(item => item.Time).TakeLast(200).ToListAsync();
+                return result == null ? NotFound() : Ok(result);
+            }
         }
 
         /// <summary>
@@ -79,8 +101,65 @@ namespace CROP.API.Controllers {
                     Time = data.Time
                 });
             }
+
+            _ = ExtractAlarmData(data);
+
             return Ok();
         }
+
+        private async Task<bool> ExtractAlarmData(GraphData data)
+        {
+            string base64 = data.Data;
+            byte[]? buffer = Convert.FromBase64String(base64);
+            int length = (buffer[6] << 8) + buffer[5] - 2;
+            int offset = 9;
+
+            buffer = await DecompressData(buffer, offset, length);
+            if (buffer == null)
+            {
+                return false;
+            }
+            var graphLength = BitConverter.ToUInt16(buffer, 0);
+            var boardLength = BitConverter.ToUInt16(buffer, 2 + graphLength);
+            var alarmLength = BitConverter.ToUInt16(buffer, 4 + graphLength + boardLength);
+            var alarmBuffer = new byte[alarmLength];
+            Buffer.BlockCopy(buffer, 6 + graphLength + boardLength, alarmBuffer, 0, alarmLength);
+
+            using MemoryStream stream = new(alarmBuffer);
+            using StreamReader sr = new(stream, Encoding.UTF8);
+            while (!sr.EndOfStream)
+            {
+                string? text = (await sr.ReadLineAsync())?.Trim();
+                if (text != null)
+                {
+                    await _alarm.InsertAsync(new AlarmData()
+                    {
+                        Station = data.Station,
+                        Version = data.Version,
+                        Data = text,
+                        Time = data.Time
+                    }, TimeSpan.FromSeconds(3600 * 4));
+                }
+            }
+
+            return true;
+        }
+        private static async Task<byte[]?> DecompressData(byte[] data, int offset, int count)
+        {
+            using MemoryStream outputStream = new();
+            using MemoryStream inputStream = new(data, offset, count);
+            using DeflateStream deflateStream = new(inputStream, CompressionMode.Decompress);
+            try
+            {
+                await deflateStream.CopyToAsync(outputStream);
+                return outputStream.ToArray();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
 
         [HttpDelete("", Name = "DeleteGraph")]
         [Authorize(Roles = "Administrator")]
