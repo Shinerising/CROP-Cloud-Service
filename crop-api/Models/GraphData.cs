@@ -2,7 +2,7 @@
 
 namespace CROP.API.Models
 {
-    [Document(StorageType = StorageType.Json)]
+    [Document]
     public class GraphData
     {
         [Indexed]

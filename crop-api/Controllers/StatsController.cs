@@ -4,6 +4,8 @@ using CROP.API.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
+using Redis.OM.Searching;
 
 namespace CROP.API.Controllers
 {
@@ -14,12 +16,16 @@ namespace CROP.API.Controllers
     /// Initializes a new instance of the <see cref="SecurityController"/> class.
     /// </remarks>
     /// <param name="configuration">The configuration.</param>
+    /// <param name="provider">The provider.</param>
     /// <param name="context">The context.</param>
     [Authorize]
     [ApiController]
     [Route("api/stats")]
-    public class StatsController(IConfiguration configuration, PostgresDbContext context) : ControllerBase
+    public class StatsController(IConfiguration configuration, RedisConnectionProvider provider, PostgresDbContext context) : ControllerBase
     {
+        private readonly RedisCollection<SystemStatus> _systemStatus = (RedisCollection<SystemStatus>)provider.RedisCollection<SystemStatus>();
+        private readonly RedisCollection<SystemReport> _systemReport = (RedisCollection<SystemReport>)provider.RedisCollection<SystemReport>();
+
         [HttpGet("", Name = "GetStationList")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<List<StationInfo>>> GetStationList()
@@ -106,38 +112,24 @@ namespace CROP.API.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SystemStatus>> GetSystemStatus()
         {
-            if (Utils.IsWindows)
+            if (!await _systemStatus.AnyAsync())
             {
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average; Write-Host $CompObject.Average"), out double cpu);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject WIN32_OperatingSystem; Write-Host ((($CompObject.TotalVisibleMemorySize-$CompObject.FreePhysicalMemory)*100)/$CompObject.TotalVisibleMemorySize)"), out double ram);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_LogicalDisk; Write-Host (($CompObject[0].size-$CompObject[0].freespace)*100/$CompObject[0].size)"), out double disk);
-                _ = double.TryParse(await Utils.ExecuteCommand("$CompObject = Get-WmiObject Win32_PerfFormattedData_Tcpip_NetworkInterface -filter 'BytesTotalPersec>0'; Write-Host ($CompObject.BytesTotalPerSec*800/$CompObject.CurrentBandwidth)"), out double network);
-                return Ok(new SystemStatus(cpu, ram, disk, network));
+                return NotFound();
             }
-            else
-            {
-                _ = double.TryParse(await Utils.ExecuteCommand("vmstat | sed -n 3p | awk '{ print 100-$15 }'"), out double cpu);
-                _ = double.TryParse(await Utils.ExecuteCommand("free | sed -n 2p | awk '{ print $3/$2*100 }'"), out double ram);
-                _ = double.TryParse(await Utils.ExecuteCommand("df | sed -n 2p | awk '{ print $3/$2*100 }'"), out double disk);
-                _ = double.TryParse(await Utils.ExecuteCommand("ifstat 0.1 1 | sed -n 3p | awk '{ print ($1+$2)*800/1000000 }'"), out double network);
-                return Ok(new SystemStatus(cpu, ram, disk, network));
-            }
+            var systemStatus = await _systemStatus.FirstAsync();
+            return systemStatus == null ? NotFound() : Ok(systemStatus);
         }
 
         [HttpGet("report", Name = "GetSystemReport")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SystemReport>> GetSystemReport()
         {
-            if (Utils.IsWindows)
+            if (!await _systemReport.AnyAsync())
             {
-                string systemreport = await Utils.ExecuteCommand("systeminfo");
-                return Ok(new SystemReport(systemreport));
+                return NotFound();
             }
-            else
-            {
-                string systemreport = await Utils.ExecuteCommand("lshw");
-                return Ok(new SystemReport(systemreport));
-            }
+            var systemReport = await _systemReport.FirstAsync();
+            return systemReport == null ? NotFound() : Ok(systemReport);
         }
     }
 }

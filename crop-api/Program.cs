@@ -33,6 +33,8 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<DbInitializer>();
 
+builder.Services.AddHostedService<SystemMonitoringService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
