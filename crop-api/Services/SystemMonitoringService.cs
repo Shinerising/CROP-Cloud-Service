@@ -36,7 +36,14 @@ namespace CROP.API.Services
                             await _systemStatus.UpdateAsync(status);
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
 
+                try
+                {
                     if (!await _systemReport.AnyAsync())
                     {
                         var report = await GetSystemReport();
@@ -52,8 +59,9 @@ namespace CROP.API.Services
                         }
                     }
                 }
-                catch 
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.Message);
                 }
 
                 await Task.Delay(1000, stoppingToken);
