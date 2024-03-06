@@ -45,6 +45,14 @@ namespace CROP.API.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        [HttpGet("status", Name = "GetStatus")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<GraphStatus>>> GetStatus()
+        {
+            var result = await _graphRealTime.Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(5), item.Time, item.SaveTime)).ToListAsync();
+            return result == null ? NotFound() : Ok(result);
+        }
+
         /// <summary>
         /// Gets alarm data.
         /// </summary>
