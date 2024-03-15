@@ -49,7 +49,7 @@ namespace CROP.API.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<List<GraphStatus>>> GetStatus()
         {
-            var result = await _graphRealTime.Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(5), item.Time, item.SaveTime)).ToListAsync();
+            var result = await _graphRealTime.Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime)).ToListAsync();
             return result == null ? NotFound() : Ok(result);
         }
 

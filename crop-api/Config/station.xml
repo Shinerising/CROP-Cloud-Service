@@ -1,4 +1,11 @@
 <?xml version="1.0"?>
 <stations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <station id="test" name="衡阳北" fullname="衡阳北驼峰" section="衡阳电务段" group="武汉铁路局" city="衡阳" long="112.620209" lat="26.894765" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="hyb" name="衡阳北" fullname="衡阳北驼峰" description="XX站场" section="衡阳电务段" group="武汉铁路局" city="湖南省衡阳市珠晖区" long="112.620209" lati="26.894765" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="yyb" name="岳阳北" fullname="岳阳北驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="湖南省岳阳市岳阳楼区" long="113.16" lati="29.40" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="ygs" name="裕国上行" fullname="裕国上行驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="辽宁省沈阳市于洪区" long="123.29" lati="41.87" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="ygx" name="裕国下行" fullname="裕国下行驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="辽宁省沈阳市于洪区" long="123.29" lati="41.87" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="yy" name="益阳" fullname="益阳驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="XXXXXXXX" long="112.40" lati="28.56" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="ld" name="娄底" fullname="娄底驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="XXXXXXXX" long="112.00" lati="27.74" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="jcsx" name="江村上行" fullname="江村上行驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="XXXXXXXX" long="113.22" lati="23.30" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
+	<station id="zj" name="湛江" fullname="湛江驼峰" description="XX站场" section="XX电务段" group="XX铁路局" city="XXXXXXXX" long="110.39" lati="21.19" record="..\..\..\database\" alarm="" monitor="..\..\..\database\monitor.mdb" graph="..\..\..\database\graph.dat" />
 </stations>
