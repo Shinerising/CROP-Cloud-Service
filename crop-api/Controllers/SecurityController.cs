@@ -31,9 +31,10 @@ namespace CROP.API.Controllers
         /// Creates a new token.
         /// </summary>
         /// <param name="user">The user to create the token for.</param>
+        /// <param name="expire">The expire days.</param>
         [AllowAnonymous]
         [HttpPost("login", Name = "CreateToken")]
-        public async Task<ActionResult<TokenData>> Login([FromBody] UserInput user)
+        public async Task<ActionResult<TokenData>> Login([FromBody] UserInput user, [FromQuery(Name = "expire")] int? expire)
         {
             var result = await context.Users.FirstAsync(_user => user.UserName == _user.UserName);
             if (result == null)
@@ -60,7 +61,7 @@ namespace CROP.API.Controllers
                         new Claim(JwtRegisteredClaimNames.Email, result.UserName),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                     ]),
-                Expires = DateTime.UtcNow.AddDays(1),
+                Expires = expire == null ? DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays((double)expire),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
