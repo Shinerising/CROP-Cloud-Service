@@ -60,7 +60,7 @@ namespace CROP.API.Controllers
                         new Claim(JwtRegisteredClaimNames.Email, result.UserName),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                     ]),
-                Expires = DateTime.UtcNow.AddMinutes(60),
+                Expires = DateTime.UtcNow.AddDays(1),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
