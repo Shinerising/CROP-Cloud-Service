@@ -65,7 +65,7 @@ namespace CROP.API.Controllers
 
         [HttpGet("monitor", Name = "GetMonitorList")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<List<DeviceData>>> GetMonitorList([FromQuery(Name = "station")] string station)
+        public async Task<ActionResult<List<MonitorData>>> GetMonitorList([FromQuery(Name = "station")] string station)
         {
             if (!await context.MonitorDatas.AnyAsync(item => item.StationId == station))
             {
@@ -77,8 +77,10 @@ namespace CROP.API.Controllers
 
         [HttpGet("shift/sum", Name = "GetShiftSum")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<List<DeviceData>>> GetShiftSum([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        public async Task<ActionResult<List<ShiftSum>>> GetShiftSum([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] int start, [FromQuery(Name = "end")] int end)
         {
+            var startTime = DateTimeOffset.FromUnixTimeSeconds(start);
+            var endTime = DateTimeOffset.FromUnixTimeSeconds(end);
             var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
             var planCount = await data.SumAsync(item => item.PlanCount);
             var CutCount = await data.SumAsync(item => item.CutCount);
@@ -90,8 +92,10 @@ namespace CROP.API.Controllers
 
         [HttpGet("shift/dist", Name = "GetShiftDist")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<List<DeviceData>>> GetShiftDist([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        public async Task<ActionResult<List<ShiftDist>>> GetShiftDist([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] int start, [FromQuery(Name = "end")] int end)
         {
+            var startTime = DateTimeOffset.FromUnixTimeSeconds(start);
+            var endTime = DateTimeOffset.FromUnixTimeSeconds(end);
             var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
             var list = await data.Select(item => new ShiftSum(null, item.ShiftTime, item.ShiftTime, item.PlanCount, item.CutCount, item.CarCount, item.WeightSum)).ToListAsync();
             var result = new ShiftDist(station, startTime, endTime, list);
@@ -100,8 +104,10 @@ namespace CROP.API.Controllers
 
         [HttpGet("shift/list", Name = "GetShiftList")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<List<DeviceData>>> GetShiftList([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
+        public async Task<ActionResult<List<ShiftList>>> GetShiftList([FromQuery(Name = "station")] string? station, [FromQuery(Name = "start")] int start, [FromQuery(Name = "end")] int end)
         {
+            var startTime = DateTimeOffset.FromUnixTimeSeconds(start);
+            var endTime = DateTimeOffset.FromUnixTimeSeconds(end);
             var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
             var list = await data.ToListAsync();
             var result = new ShiftList(station, startTime, endTime, list);
