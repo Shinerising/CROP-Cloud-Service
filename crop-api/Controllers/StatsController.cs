@@ -39,9 +39,21 @@ namespace CROP.API.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
-        [HttpGet("station", Name = "GetStationInformation")]
+        [HttpGet("station", Name = "GetStation")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<StationData>> GetStation([FromQuery(Name = "station")] string station)
+        {
+            if (!await context.Stations.AnyAsync())
+            {
+                return NotFound();
+            }
+            var result = await context.Stations.FirstOrDefaultAsync(item => item.Id == station);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("station/data", Name = "GetStationInformation")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<StationData>> GetStationData([FromQuery(Name = "station")] string station)
         {
             if (!await context.StationDatas.AnyAsync(item => item.StationId == station))
             {
