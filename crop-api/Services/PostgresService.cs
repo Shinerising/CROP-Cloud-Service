@@ -23,7 +23,7 @@ namespace CROP.API.Services
         {
             dbContext.Database.EnsureCreated();
 
-            var users = LoadXmlData<List<UserData>>("users", configuration[Env.UserFolder] ?? "./User/user.xml");
+            var users = LoadXmlData<List<UserData>>("users", configuration[Env.UserPath] ?? "./User/user.xml");
             if (users != null)
             {
                 var hasher = new PasswordHasher<UserData>();
