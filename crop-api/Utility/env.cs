@@ -5,8 +5,10 @@ namespace CROP.API.Utility
     {
         public const string PostgresConnection = "DATABASE_URL";
         public const string RedisConnection = "REDIS_URL";
-        public const string SecretKey = "SECRET_KEY";
-        public const string CORS = "CORS_URL";
+        public const string CORS = "CORS";
+        public const string ConfigFolder = "CONFIG_PATH";
+        public const string UserFolder = "USER_PATH";
+        public const string StorageFolder = "STORAGE_PATH";
 
         public static void Load(string filePath)
         {

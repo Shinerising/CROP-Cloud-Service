@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.IO;
 using System.Security.Claims;
 using FileSystem = System.IO.File;
+using CROP.API.Utility;
 
 namespace CROP.API.Controllers
 {
@@ -23,6 +24,8 @@ namespace CROP.API.Controllers
     [Route("api/file")]
     public class FileController(IConfiguration configuration, PostgresDbContext context) : ControllerBase
     {
+        private readonly string _root = configuration[Env.StorageFolder] ?? configuration["Storage:File"] ?? "/storage";
+
         /// <summary>
         /// Upload file.
         /// </summary>
@@ -63,8 +66,8 @@ namespace CROP.API.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var targetFile = Path.Combine(configuration["Storage:File"] ?? "", station, tag, fileName);
-            Directory.CreateDirectory(Path.Combine(configuration["Storage:File"] ?? "", station, tag));
+            var targetFile = Path.Combine(_root ?? "", station, tag, fileName);
+            Directory.CreateDirectory(Path.Combine(_root ?? "", station, tag));
 
             using FileStream originalFileStream = new(tempFile, FileMode.Open);
             using FileStream decompressedFileStream = FileSystem.Create(targetFile);
@@ -123,7 +126,7 @@ namespace CROP.API.Controllers
             {
                 return NotFound();
             }
-            var target = Path.Combine(configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
+            var target = Path.Combine(_root ?? "", result.Station, result.Tag, result.FileName);
             if (FileSystem.Exists(target))
             {
                 return Ok(result);
@@ -165,7 +168,7 @@ namespace CROP.API.Controllers
             var list = new List<FileRecord>();
             foreach (var file in result)
             {
-                var target = Path.Combine(configuration["Storage:File"] ?? "", file.Station, file.Tag, file.FileName);
+                var target = Path.Combine(_root ?? "", file.Station, file.Tag, file.FileName);
                 if (FileSystem.Exists(target))
                 {
                     list.Add(file);
@@ -208,7 +211,7 @@ namespace CROP.API.Controllers
             var list = new List<FileRecord>();
             foreach (var file in result)
             {
-                var target = Path.Combine(configuration["Storage:File"] ?? "", file.Station, file.Tag, file.FileName);
+                var target = Path.Combine(_root ?? "", file.Station, file.Tag, file.FileName);
                 if (FileSystem.Exists(target))
                 {
                     list.Add(file);
@@ -257,7 +260,7 @@ namespace CROP.API.Controllers
                 return NotFound();
             }
 
-            var targetFile = Path.Combine(configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
+            var targetFile = Path.Combine(_root ?? "", result.Station, result.Tag, result.FileName);
 
             if (FileSystem.Exists(targetFile))
             {
@@ -297,7 +300,7 @@ namespace CROP.API.Controllers
             context.FileRecords.Remove(result);
             context.SaveChanges();
 
-            var targetFile = Path.Combine(configuration["Storage:File"] ?? "", result.Station, result.Tag, result.FileName);
+            var targetFile = Path.Combine(_root ?? "", result.Station, result.Tag, result.FileName);
 
             if (FileSystem.Exists(targetFile))
             {

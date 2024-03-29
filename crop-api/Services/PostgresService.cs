@@ -1,5 +1,6 @@
 ﻿using CROP.API.Data;
 using CROP.API.Models;
+using CROP.API.Utility;
 using Microsoft.AspNetCore.Identity;
 using System.Xml.Serialization;
 
@@ -12,16 +13,17 @@ namespace CROP.API.Services
             using var scope = app.Services.CreateScope();
             var dbInitializer = scope.ServiceProvider.GetRequiredService<DbInitializer>();
             var context = scope.ServiceProvider.GetRequiredService<PostgresDbContext>();
-            dbInitializer.Initialize(context);
+            dbInitializer.Initialize(app.Configuration, context);
         }
     }
 
     public class DbInitializer
     {
-        public void Initialize(PostgresDbContext dbContext)
+        public void Initialize(IConfiguration configuration, PostgresDbContext dbContext)
         {
             dbContext.Database.EnsureCreated();
-            var users = LoadXmlData<List<UserData>>("users", "./Config/user.xml");
+
+            var users = LoadXmlData<List<UserData>>("users", configuration[Env.UserFolder] ?? "./User/user.xml");
             if (users != null)
             {
                 var hasher = new PasswordHasher<UserData>();
@@ -32,7 +34,7 @@ namespace CROP.API.Services
                 }
             }
 
-            var stations = LoadXmlData<List<StationInfo>>("stations", "./Config/station.xml");
+            var stations = LoadXmlData<List<StationInfo>>("stations", configuration[Env.StorageFolder] ?? "./Config/station.xml");
             if (stations != null) {
                 foreach (var station in stations.Where(station => !station.IsDisabled)) {
                     if (!dbContext.Stations.Any(_station => _station.Id == station.Id)) {

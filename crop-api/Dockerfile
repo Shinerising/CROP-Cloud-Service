@@ -26,11 +26,14 @@ ENTRYPOINT ["dotnet", "CROP API.dll"]
 EXPOSE 5182
 
 # add volumes
-VOLUME [ "/storage", "/logs", "/seeding" ]
+VOLUME [ "/config", "/user", "/storage" ]
 
 # add environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://localhost:5182
 ENV DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
 ENV REDIS_URL=redis://redis:6379
-ENV SECRET_KEY=secret
+ENV CORS=false
+ENV CONFIG_PATH=/config
+ENV USER_PATH=/user
+ENV STORAGE_PATH=/storage
