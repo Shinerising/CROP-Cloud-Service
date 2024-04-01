@@ -37,7 +37,7 @@ namespace CROP.API.Services
             }
 
             Console.WriteLine("Initializing Stations.");
-            var stations = LoadXmlData<List<StationInfo>>("stations", configuration[Env.StorageFolder] ?? "./Config/station.xml");
+            var stations = LoadXmlData<List<StationInfo>>("stations", configuration[Env.ConfigPath] ?? "./Config/station.xml");
             Console.WriteLine("Stations: " + stations?.Count);
             if (stations != null) {
                 foreach (var station in stations.Where(station => !station.IsDisabled)) {
