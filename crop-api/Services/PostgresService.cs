@@ -70,6 +70,10 @@ namespace CROP.API.Services
                     var serializer = new XmlSerializer(typeof(T), new XmlRootAttribute(root));
                     return (T?)serializer.Deserialize(stream);
                 }
+                else
+                {
+                    Console.WriteLine($"File {filename} not found.");
+                }
             }
             catch (Exception e)
             {
