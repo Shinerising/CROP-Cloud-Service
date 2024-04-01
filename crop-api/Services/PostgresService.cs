@@ -67,8 +67,9 @@ namespace CROP.API.Services
                     return (T?)serializer.Deserialize(stream);
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
             }
             return default;
         }
