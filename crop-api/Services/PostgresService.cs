@@ -23,7 +23,9 @@ namespace CROP.API.Services
         {
             dbContext.Database.EnsureCreated();
 
+            Console.WriteLine("Initializing Users.");
             var users = LoadXmlData<List<UserData>>("users", configuration[Env.UserPath] ?? "./User/user.xml");
+            Console.WriteLine("Users: " + users?.Count);
             if (users != null)
             {
                 var hasher = new PasswordHasher<UserData>();
@@ -34,7 +36,9 @@ namespace CROP.API.Services
                 }
             }
 
+            Console.WriteLine("Initializing Stations.");
             var stations = LoadXmlData<List<StationInfo>>("stations", configuration[Env.StorageFolder] ?? "./Config/station.xml");
+            Console.WriteLine("Stations: " + stations?.Count);
             if (stations != null) {
                 foreach (var station in stations.Where(station => !station.IsDisabled)) {
                     if (!dbContext.Stations.Any(_station => _station.Id == station.Id)) {
