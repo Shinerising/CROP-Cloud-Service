@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace CROP.API.Models
 {
     public record RealFile(string FileName, string Extension, string Station, string Tag, long FileSize, DateTimeOffset CreateTime, DateTimeOffset ModifyTime);
+    public record RealFilePreview(string FileName, string Extension, string Station, string Tag, long FileSize, DateTimeOffset CreateTime, DateTimeOffset ModifyTime, string content);
     /// <summary>
     /// 日志文件存储记录
     /// </summary>

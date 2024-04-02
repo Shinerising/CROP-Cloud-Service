@@ -10,6 +10,7 @@ using FileSystem = System.IO.File;
 using CROP.API.Utility;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using StackExchange.Redis;
+using System.Text;
 
 namespace CROP.API.Controllers
 {
@@ -118,9 +119,47 @@ namespace CROP.API.Controllers
         /// <param name="tag">The tag of the file.</param>
         /// <param name="filename">The name of the file.</param>
         [HttpGet]
-        [Route("get/real", Name = "GetFile")]
+        [Route("real/preview", Name = "GetRealFilePreview")]
         [Authorize]
-        public async Task<ActionResult<RealFile>> GetRealFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string? filename)
+        public async Task<ActionResult<RealFilePreview>> GetRealFilePreview([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename, [FromQuery(Name = "charset")] string? charset)
+        {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+
+            var path = Path.Combine(_root, station, tag, filename);
+
+            if (!FileSystem.Exists(path))
+            {
+                return NotFound();
+            }
+
+            return await Task.Run(() =>
+            {
+                var file = new FileInfo(path);
+                string content = "";
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                using FileStream fs = new(path, FileMode.Open, FileAccess.Read);
+                using StreamReader sr = new(fs, Encoding.GetEncoding(charset ?? "utf-8"), true);
+                char[] bytes = new char[10240];
+                int count = sr.ReadBlock(bytes, 0, 10240);
+                content = new string(bytes, 0, count);
+                var record = new RealFilePreview(file.Name, file.Extension, station, tag, file.Length, file.CreationTime, file.LastWriteTime, content);
+                return Ok(record);
+            });
+        }
+        /// <summary>
+        /// Get file information.
+        /// </summary>
+        /// <param name="id">The id of the file.</param>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
+        /// <param name="filename">The name of the file.</param>
+        [HttpGet]
+        [Route("real/get", Name = "GetRealFile")]
+        [Authorize]
+        public async Task<ActionResult<RealFile>> GetRealFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
             if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
             {
@@ -178,7 +217,7 @@ namespace CROP.API.Controllers
         /// <param name="tag">The tag of the file.</param>
         /// <param name="ext">The extension of the file.</param>
         [HttpGet]
-        [Route("/file/Real/list", Name = "GetFileList")]
+        [Route("real/list", Name = "GetRealFileList")]
         [Authorize]
         public async Task<ActionResult<List<RealFile>>> GetRealFileList([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "ext")] string ext)
         {
@@ -213,7 +252,7 @@ namespace CROP.API.Controllers
         /// <param name="station">The station to download the file for.</param>
         /// <param name="tag">The tag of the file.</param>
         [HttpGet]
-        [Route("file/list", Name = "GetFileList")]
+        [Route("list", Name = "GetFileList")]
         [Authorize]
         public async Task<ActionResult<List<FileRecord>>> GetFileList([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag)
         {
@@ -256,7 +295,7 @@ namespace CROP.API.Controllers
         /// <param name="station">The station to download the file for.</param>
         /// <param name="tag">The tag of the file.</param>
         [HttpGet]
-        [Route("file/list/filter", Name = "GetFileListFilter")]
+        [Route("list/filter", Name = "GetFileListFilter")]
         [Authorize]
         public async Task<ActionResult<List<FileRecord>>> GetFileListFilter([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
         {
