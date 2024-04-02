@@ -389,7 +389,7 @@ namespace CROP.API.Controllers
             if (FileSystem.Exists(targetFile))
             {
                 await Task.Delay(10);
-                using FileStream fs = new(targetFile, FileMode.Open, FileAccess.Read);
+                FileStream fs = new(targetFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096);
                 return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
             }
             else
@@ -424,7 +424,7 @@ namespace CROP.API.Controllers
                 using FileStream compressedFileStream = FileSystem.Create(tempFile);
                 using GZipStream compressionStream = new(compressedFileStream, CompressionMode.Compress);
                 originalFileStream.CopyTo(compressionStream);
-                using FileStream fs = new(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
+                FileStream fs = new(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
 
                 return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
             }
