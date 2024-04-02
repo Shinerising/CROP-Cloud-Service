@@ -198,11 +198,11 @@ namespace CROP.API.Controllers
 
             return await Task.Run(() =>
             {
-                var list = Directory.EnumerateFiles(folder, pattern).Select(file =>
-                {
-                    var info = new FileInfo(file);
-                    return new RealFile(info.Name, info.Extension, station, tag, info.Length, info.CreationTime, info.LastWriteTime);
-                }).ToList();
+                var list = Directory.EnumerateFiles(folder, pattern)
+                .Select(file => new FileInfo(file))
+                .OrderBy(info => info.CreationTimeUtc)
+                .Take(1024)
+                .Select(info => new RealFile(info.Name, info.Extension, station, tag, info.Length, info.CreationTime, info.LastWriteTime)).ToList();
                 return Ok(list);
             }); 
         }
