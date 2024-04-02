@@ -142,8 +142,8 @@ namespace CROP.API.Controllers
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 using FileStream fs = new(path, FileMode.Open, FileAccess.Read);
                 using StreamReader sr = new(fs, Encoding.GetEncoding(charset ?? "utf-8"), true);
-                char[] bytes = new char[10240];
-                int count = sr.ReadBlock(bytes, 0, 10240);
+                char[] bytes = new char[102400];
+                int count = sr.ReadBlock(bytes, 0, 102400);
                 content = new string(bytes, 0, count);
                 var record = new RealFilePreview(file.Name, file.Extension, station, tag, file.Length, file.CreationTime, file.LastWriteTime, content);
                 return Ok(record);
@@ -219,12 +219,15 @@ namespace CROP.API.Controllers
         [HttpGet]
         [Route("real/list", Name = "GetRealFileList")]
         [Authorize]
-        public async Task<ActionResult<List<RealFile>>> GetRealFileList([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "ext")] string ext)
+        public async Task<ActionResult<List<RealFile>>> GetRealFileList([FromQuery(Name = "start")] int start, [FromQuery(Name = "end")] int end, [FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "ext")] string ext)
         {
             if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag))
             {
                 return BadRequest();
             }
+
+            var startTime = DateTimeOffset.FromUnixTimeSeconds(start);
+            var endTime = DateTimeOffset.FromUnixTimeSeconds(end);
 
             var folder = Path.Combine(_root, station, tag);
 
@@ -240,6 +243,7 @@ namespace CROP.API.Controllers
                 var list = Directory.EnumerateFiles(folder, pattern)
                 .Select(file => new FileInfo(file))
                 .OrderBy(info => info.CreationTimeUtc)
+                .Where(info => info.CreationTimeUtc >= startTime && info.CreationTimeUtc <= endTime)
                 .Take(1024)
                 .Select(info => new RealFile(info.Name, info.Extension, station, tag, info.Length, info.CreationTime, info.LastWriteTime)).ToList();
                 return Ok(list);
@@ -350,6 +354,50 @@ namespace CROP.API.Controllers
             return result == null || result.Count == 0 ? NotFound() : Ok(result);
         }
 
+        [HttpGet("shift", Name = "GetShiftInfo")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<ShiftData>> GetShiftInfo([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
+        {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+
+            var path = Path.Combine(_root, station, tag, filename);
+            var result = await context.ShiftDatas.FirstOrDefaultAsync(item => item.FileName == path);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        /// <summary>
+        /// Download a file.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="filename">The name of the file.</param>
+        /// <param name="tag">The tag of the file.</param>
+        [HttpGet]
+        [Route("real/download", Name = "DownloadRealFile")]
+        [Authorize]
+        public async Task<ActionResult> DownloadRealFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
+        {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+
+            var targetFile = Path.Combine(_root, station, tag, filename);
+
+            if (FileSystem.Exists(targetFile))
+            {
+                await Task.Delay(10);
+                using FileStream fs = new(targetFile, FileMode.Open, FileAccess.Read);
+                return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
         /// <summary>
         /// Download a file.
         /// </summary>
@@ -376,7 +424,7 @@ namespace CROP.API.Controllers
                 using FileStream compressedFileStream = FileSystem.Create(tempFile);
                 using GZipStream compressionStream = new(compressedFileStream, CompressionMode.Compress);
                 originalFileStream.CopyTo(compressionStream);
-                var fs = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
+                using FileStream fs = new(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
 
                 return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
             }
