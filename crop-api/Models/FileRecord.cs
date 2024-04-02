@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CROP.API.Models
 {
+    public record RealFile(string FileName, string Extension, string Station, string Tag, long FileSize, DateTimeOffset CreateTime, DateTimeOffset ModifyTime);
     /// <summary>
     /// 日志文件存储记录
     /// </summary>

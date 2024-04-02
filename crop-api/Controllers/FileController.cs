@@ -8,6 +8,8 @@ using System.IO;
 using System.Security.Claims;
 using FileSystem = System.IO.File;
 using CROP.API.Utility;
+using Microsoft.Extensions.FileSystemGlobbing.Internal;
+using StackExchange.Redis;
 
 namespace CROP.API.Controllers
 {
@@ -66,8 +68,8 @@ namespace CROP.API.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var targetFile = Path.Combine(_root ?? "", station, tag, fileName);
-            Directory.CreateDirectory(Path.Combine(_root ?? "", station, tag));
+            var targetFile = Path.Combine(_root, station, tag, fileName);
+            Directory.CreateDirectory(Path.Combine(_root, station, tag));
 
             using FileStream originalFileStream = new(tempFile, FileMode.Open);
             using FileStream decompressedFileStream = FileSystem.Create(targetFile);
@@ -108,6 +110,37 @@ namespace CROP.API.Controllers
 
             return Ok();
         }
+        /// <summary>
+        /// Get file information.
+        /// </summary>
+        /// <param name="id">The id of the file.</param>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
+        /// <param name="filename">The name of the file.</param>
+        [HttpGet]
+        [Route("get/real", Name = "GetFile")]
+        [Authorize]
+        public async Task<ActionResult<RealFile>> GetRealFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string? filename)
+        {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+
+            var path = Path.Combine(_root, station, tag, filename);
+
+            if (!FileSystem.Exists(path))
+            {
+                return NotFound();
+            }
+
+            return await Task.Run(() =>
+            {
+                var file = new FileInfo(path);
+                var record = new RealFile(file.Name, file.Extension, station, tag, file.Length, file.CreationTime, file.LastWriteTime);
+                return Ok(record);
+            });
+        }
 
         /// <summary>
         /// Get file information.
@@ -126,7 +159,7 @@ namespace CROP.API.Controllers
             {
                 return NotFound();
             }
-            var target = Path.Combine(_root ?? "", result.Station, result.Tag, result.FileName);
+            var target = Path.Combine(_root, result.Station, result.Tag, result.FileName);
             if (FileSystem.Exists(target))
             {
                 return Ok(result);
@@ -137,6 +170,41 @@ namespace CROP.API.Controllers
                 await context.SaveChangesAsync();
                 return NotFound();
             }
+        }
+        /// <summary>
+        /// Get file list.
+        /// </summary>
+        /// <param name="station">The station to download the file for.</param>
+        /// <param name="tag">The tag of the file.</param>
+        /// <param name="ext">The extension of the file.</param>
+        [HttpGet]
+        [Route("/file/Real/list", Name = "GetFileList")]
+        [Authorize]
+        public async Task<ActionResult<List<RealFile>>> GetRealFileList([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "ext")] string ext)
+        {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag))
+            {
+                return BadRequest();
+            }
+
+            var folder = Path.Combine(_root, station, tag);
+
+            if (!Directory.Exists(folder))
+            {
+                return NotFound();
+            }
+
+            var pattern = string.IsNullOrEmpty(ext) ? "*.*" : $"*.{ext}";
+
+            return await Task.Run(() =>
+            {
+                var list = Directory.EnumerateFiles(folder, pattern).Select(file =>
+                {
+                    var info = new FileInfo(file);
+                    return new RealFile(info.Name, info.Extension, station, tag, info.Length, info.CreationTime, info.LastWriteTime);
+                }).ToList();
+                return Ok(list);
+            }); 
         }
 
         /// <summary>
@@ -168,7 +236,7 @@ namespace CROP.API.Controllers
             var list = new List<FileRecord>();
             foreach (var file in result)
             {
-                var target = Path.Combine(_root ?? "", file.Station, file.Tag, file.FileName);
+                var target = Path.Combine(_root, file.Station, file.Tag, file.FileName);
                 if (FileSystem.Exists(target))
                 {
                     list.Add(file);
@@ -211,7 +279,7 @@ namespace CROP.API.Controllers
             var list = new List<FileRecord>();
             foreach (var file in result)
             {
-                var target = Path.Combine(_root ?? "", file.Station, file.Tag, file.FileName);
+                var target = Path.Combine(_root, file.Station, file.Tag, file.FileName);
                 if (FileSystem.Exists(target))
                 {
                     list.Add(file);
@@ -260,7 +328,7 @@ namespace CROP.API.Controllers
                 return NotFound();
             }
 
-            var targetFile = Path.Combine(_root ?? "", result.Station, result.Tag, result.FileName);
+            var targetFile = Path.Combine(_root, result.Station, result.Tag, result.FileName);
 
             if (FileSystem.Exists(targetFile))
             {
@@ -300,7 +368,7 @@ namespace CROP.API.Controllers
             context.FileRecords.Remove(result);
             context.SaveChanges();
 
-            var targetFile = Path.Combine(_root ?? "", result.Station, result.Tag, result.FileName);
+            var targetFile = Path.Combine(_root, result.Station, result.Tag, result.FileName);
 
             if (FileSystem.Exists(targetFile))
             {
