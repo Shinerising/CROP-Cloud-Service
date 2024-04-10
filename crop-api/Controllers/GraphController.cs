@@ -19,6 +19,7 @@ namespace CROP.API.Controllers
     {
         private readonly RedisCollection<GraphData> _graph = (RedisCollection<GraphData>)provider.RedisCollection<GraphData>();
         private readonly RedisCollection<GraphDataRealTime> _graphRealTime = (RedisCollection<GraphDataRealTime>)provider.RedisCollection<GraphDataRealTime>();
+        private readonly RedisCollection<GraphDataSimple> _graphSimple = (RedisCollection<GraphDataSimple>)provider.RedisCollection<GraphDataSimple>();
         private readonly RedisCollection<AlarmData> _alarm = (RedisCollection<AlarmData>)provider.RedisCollection<AlarmData>();
 
         [HttpGet("", Name = "GetGraph")]
@@ -108,12 +109,12 @@ namespace CROP.API.Controllers
                 });
             }
 
-            _ = ExtractAlarmData(data);
+            await ExtractGraphData(data);
 
             return Ok();
         }
 
-        private async Task<bool> ExtractAlarmData(GraphData data)
+        private async Task<bool> ExtractGraphData(GraphData data)
         {
             string base64 = data.Data;
             byte[]? buffer = Convert.FromBase64String(base64);
@@ -126,10 +127,35 @@ namespace CROP.API.Controllers
                 return false;
             }
             var graphLength = BitConverter.ToUInt16(buffer, 0);
+            var graphBuffer = new byte[graphLength];
             var boardLength = BitConverter.ToUInt16(buffer, 2 + graphLength);
             var alarmLength = BitConverter.ToUInt16(buffer, 4 + graphLength + boardLength);
             var alarmBuffer = new byte[alarmLength];
+            Buffer.BlockCopy(buffer, 2, graphBuffer, 0, graphLength);
             Buffer.BlockCopy(buffer, 6 + graphLength + boardLength, alarmBuffer, 0, alarmLength);
+
+            string graphBase64 = Convert.ToBase64String(graphBuffer);
+
+            if (await _graphSimple.AnyAsync(item => item.Station == data.Station))
+            {
+                await _graphSimple.UpdateAsync(new GraphDataSimple()
+                {
+                    Station = data.Station,
+                    Version = data.Version,
+                    Data = graphBase64,
+                    Time = data.Time
+                });
+            }
+            else
+            {
+                await _graphSimple.InsertAsync(new GraphDataSimple()
+                {
+                    Station = data.Station,
+                    Version = data.Version,
+                    Data = graphBase64,
+                    Time = data.Time
+                });
+            }
 
             using MemoryStream stream = new(alarmBuffer);
             using StreamReader sr = new(stream, Encoding.UTF8);
@@ -186,32 +212,18 @@ namespace CROP.API.Controllers
                 return Forbid();
             }
 
-            if (!await _graphRealTime.AnyAsync(item => item.Station == station))
+            if (!await _graphSimple.AnyAsync(item => item.Station == station))
             {
                 return NotFound();
             }
 
-            var result = await _graphRealTime.FirstAsync(item => item.Station == station);
+            var result = await _graphSimple.FirstAsync(item => item.Station == station);
             if (result == null)
             {
                 return NotFound();
             }
 
-            byte[]? buffer = Convert.FromBase64String(result.Data);
-            int length = (buffer[6] << 8) + buffer[5] - 2;
-            int offset = 9;
-
-            buffer = await DecompressData(buffer, offset, length);
-            if (buffer == null)
-            {
-                return Forbid();
-            }
-
-            var graphLength = BitConverter.ToUInt16(buffer, 0);
-            var graphBuffer = new byte[graphLength];
-            Buffer.BlockCopy(buffer, 2, graphBuffer, 0, graphLength);
-
-            string text = $"{result.Time.ToUnixTimeSeconds()}\n{Convert.ToBase64String(graphBuffer)}";
+            string text = $"{result.Time.ToUnixTimeSeconds()}\n{result.Data}";
 
             return Ok(text);
         }
