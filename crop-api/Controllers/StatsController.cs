@@ -35,7 +35,7 @@ namespace CROP.API.Controllers
                 return NotFound();
             }
             //Response.Headers.Append("Cache-Control", "public, max-age=3600");
-            var result = await context.Stations.ToListAsync();
+            var result = await context.Stations.OrderBy(item => item.Id).ToListAsync();
             return result == null ? NotFound() : Ok(result);
         }
 
