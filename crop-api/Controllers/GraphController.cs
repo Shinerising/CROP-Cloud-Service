@@ -212,6 +212,15 @@ namespace CROP.API.Controllers
                 return Forbid();
             }
 
+            if (!string.IsNullOrEmpty(Request.Headers["CROP-TEST"]))
+            {
+                byte[] data = new byte[10000];
+                Random rnd = new();
+                rnd.NextBytes(data);
+                string base64 = Convert.ToBase64String(data);
+                return Ok($"{DateTimeOffset.Now.ToUnixTimeSeconds()}\n{base64}");
+            }
+
             if (!await _graphSimple.AnyAsync(item => item.Station == station))
             {
                 return NotFound();
