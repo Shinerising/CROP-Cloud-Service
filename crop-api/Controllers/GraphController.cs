@@ -48,10 +48,18 @@ namespace CROP.API.Controllers
 
         [HttpGet("status", Name = "GetStatus")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<List<GraphStatus>>> GetStatus()
+        public async Task<ActionResult<List<GraphStatus>>> GetStatus([FromQuery(Name = "station")] string? station)
         {
-            var result = await _graphRealTime.Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime)).ToListAsync();
-            return result == null ? NotFound() : Ok(result);
+            if (station == null)
+            {
+                var result = await _graphRealTime.Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime)).ToListAsync();
+                return result == null ? NotFound() : Ok(result);
+            }
+            else
+            {
+                var result = await _graphRealTime.Where(item => item.Station == station).Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime)).ToListAsync();
+                return result == null ? NotFound() : Ok(result);
+            }
         }
 
         /// <summary>
@@ -64,12 +72,12 @@ namespace CROP.API.Controllers
         {
             if (station == null)
             {
-                var result = await _alarm.Where(item => item.Station == station).OrderBy(item => item.Time).TakeLast(200).ToListAsync();
+                var result = await _alarm.OrderBy(item => item.Time).TakeLast(200).ToListAsync();
                 return result == null ? NotFound() : Ok(result);
             }
             else
             {
-                var result = await _alarm.OrderBy(item => item.Time).TakeLast(200).ToListAsync();
+                var result = await _alarm.Where(item => item.Station == station).OrderBy(item => item.Time).TakeLast(200).ToListAsync();
                 return result == null ? NotFound() : Ok(result);
             }
         }
