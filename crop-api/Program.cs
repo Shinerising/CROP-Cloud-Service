@@ -24,15 +24,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerJwtSupport();
 
-builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration[Env.RedisConnection] ?? builder.Configuration["Redis:Connection"] ?? "redis://localhost"));
-builder.Services.AddHostedService<IndexCreationService>();
 builder.Services.AddDbContext<PostgresDbContext>(options => options.UseNpgsql(builder.Configuration[Env.PostgresConnection] ?? builder.Configuration["PostgreSQL:Connection"]));
+builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration[Env.RedisConnection] ?? builder.Configuration["Redis:Connection"] ?? "redis://localhost"));
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<DbInitializer>();
 
+builder.Services.AddHostedService<IndexCreationService>();
 builder.Services.AddHostedService<SystemMonitoringService>();
 
 var app = builder.Build();

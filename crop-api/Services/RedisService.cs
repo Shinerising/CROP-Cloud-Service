@@ -17,6 +17,7 @@ namespace CROP.API.Services
                 await _provider.Connection.CreateIndexAsync(typeof(GraphDataRealTime));
                 await _provider.Connection.CreateIndexAsync(typeof(GraphDataSimple));
                 await _provider.Connection.CreateIndexAsync(typeof(AlarmData));
+                await _provider.Connection.CreateIndexAsync(typeof(BoardData));
                 await _provider.Connection.CreateIndexAsync(typeof(SystemStatus));
                 await _provider.Connection.CreateIndexAsync(typeof(SystemReport));
             }

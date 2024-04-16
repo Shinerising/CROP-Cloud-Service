@@ -21,6 +21,7 @@ namespace CROP.API.Controllers
         private readonly RedisCollection<GraphDataRealTime> _graphRealTime = (RedisCollection<GraphDataRealTime>)provider.RedisCollection<GraphDataRealTime>();
         private readonly RedisCollection<GraphDataSimple> _graphSimple = (RedisCollection<GraphDataSimple>)provider.RedisCollection<GraphDataSimple>();
         private readonly RedisCollection<AlarmData> _alarm = (RedisCollection<AlarmData>)provider.RedisCollection<AlarmData>();
+        private readonly RedisCollection<BoardData> _board = (RedisCollection<BoardData>)provider.RedisCollection<BoardData>();
 
         [HttpGet("", Name = "GetGraph")]
         [Authorize(Roles = "Administrator")]
@@ -72,7 +73,7 @@ namespace CROP.API.Controllers
         {
             if (station == null)
             {
-                var result = await _alarm.OrderBy(item => item.Time).TakeLast(200).ToListAsync();
+                var result = await _alarm.OrderBy(item => item.SaveTime).TakeLast(200).ToListAsync();
                 return result == null ? NotFound() : Ok(result);
             }
             else
@@ -83,13 +84,55 @@ namespace CROP.API.Controllers
         }
 
         /// <summary>
+        /// Inserts a new alarm data.
+        /// </summary>
+        /// <param name="data">The data to insert.</param>
+        /// <returns>The result of the operation.</returns>
+        [HttpPost("alarm", Name = "PostAlarmData")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<AlarmData>>> PostAlarm([FromBody] AlarmData data)
+        {
+            if (!await context.Stations.AnyAsync(_station => _station.Id == data.Station))
+            {
+                return Forbid();
+            }
+
+            await _alarm.InsertAsync(new AlarmData()
+            {
+                Station = data.Station,
+                Version = data.Version,
+                Data = data.Data,
+                Time = data.Time
+            }, TimeSpan.FromSeconds(3600 * 4));
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Gets board data.
+        /// </summary>
+        /// <param name="station">The station to get the data for.</param>
+        /// <returns>The result of the operation.</returns>
+        [HttpGet("board", Name = "GetBoardData")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<AlarmData>>> GetBoard([FromQuery(Name = "station")] string station)
+        {
+            if (!await _board.AnyAsync(item => item.Station == station))
+            {
+                return NotFound();
+            }
+            var result = await _board.FirstAsync(item => item.Station == station);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        /// <summary>
         /// Inserts a new graph data.
         /// </summary>
         [HttpPost("", Name = "PutGraph")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> Put([FromBody] GraphData data)
         {
-            if (!context.Stations.Any(_station => _station.Id == data.Station))
+            if (!await context.Stations.AnyAsync(_station => _station.Id == data.Station))
             {
                 return Forbid();
             }
@@ -137,12 +180,15 @@ namespace CROP.API.Controllers
             var graphLength = BitConverter.ToUInt16(buffer, 0);
             var graphBuffer = new byte[graphLength];
             var boardLength = BitConverter.ToUInt16(buffer, 2 + graphLength);
+            var boardBuffer = new byte[boardLength];
             var alarmLength = BitConverter.ToUInt16(buffer, 4 + graphLength + boardLength);
             var alarmBuffer = new byte[alarmLength];
             Buffer.BlockCopy(buffer, 2, graphBuffer, 0, graphLength);
+            Buffer.BlockCopy(buffer, 4 + graphLength, boardBuffer, 0, boardLength);
             Buffer.BlockCopy(buffer, 6 + graphLength + boardLength, alarmBuffer, 0, alarmLength);
 
             string graphBase64 = Convert.ToBase64String(graphBuffer);
+            string boardBase64 = Convert.ToBase64String(boardBuffer);
 
             if (await _graphSimple.AnyAsync(item => item.Station == data.Station))
             {
@@ -161,6 +207,27 @@ namespace CROP.API.Controllers
                     Station = data.Station,
                     Version = data.Version,
                     Data = graphBase64,
+                    Time = data.Time
+                });
+            }
+
+            if (await _board.AnyAsync(item => item.Station == data.Station))
+            {
+                await _board.UpdateAsync(new BoardData()
+                {
+                    Station = data.Station,
+                    Version = data.Version,
+                    Data = boardBase64,
+                    Time = data.Time
+                });
+            }
+            else
+            {
+                await _board.InsertAsync(new BoardData()
+                {
+                    Station = data.Station,
+                    Version = data.Version,
+                    Data = boardBase64,
                     Time = data.Time
                 });
             }
@@ -199,7 +266,6 @@ namespace CROP.API.Controllers
                 return null;
             }
         }
-
 
         [HttpDelete("", Name = "DeleteGraph")]
         [Authorize(Roles = "Administrator")]

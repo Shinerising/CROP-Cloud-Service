@@ -2,6 +2,7 @@
   "profiles": {
     "http": {
       "commandName": "Project",
+      "externalUrlConfiguration": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
@@ -15,6 +16,7 @@
     },
     "https": {
       "commandName": "Project",
+      "externalUrlConfiguration": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
