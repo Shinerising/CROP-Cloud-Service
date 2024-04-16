@@ -73,12 +73,12 @@ namespace CROP.API.Controllers
         {
             if (station == null)
             {
-                var result = await _alarm.OrderBy(item => item.SaveTime).TakeLast(200).ToListAsync();
+                var result = (await _alarm.OrderByDescending(item => item.SaveTime).Take(200).ToListAsync()).OrderBy(item => item.SaveTime).ToList();
                 return result == null ? NotFound() : Ok(result);
             }
             else
             {
-                var result = await _alarm.Where(item => item.Station == station).OrderBy(item => item.Time).TakeLast(200).ToListAsync();
+                var result = (await _alarm.Where(item => item.Station == station).OrderByDescending(item => item.Time).Take(200).ToListAsync()).OrderBy(item => item.SaveTime).ToList();
                 return result == null ? NotFound() : Ok(result);
             }
         }
