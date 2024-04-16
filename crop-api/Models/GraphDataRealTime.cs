@@ -24,5 +24,5 @@ namespace CROP.API.Models
         public DateTimeOffset SaveTime { get; set; } = DateTimeOffset.Now;
         public string Data { get; set; } = "";
     }
-    public record GraphStatus(string Station,bool IsOnline, DateTimeOffset LatestTime, DateTimeOffset SaveTime);
+    public record GraphStatus(string Station, bool IsOnline, DateTimeOffset LatestTime, DateTimeOffset SaveTime, int length);
 }

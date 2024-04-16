@@ -53,12 +53,12 @@ namespace CROP.API.Controllers
         {
             if (station == null)
             {
-                var result = (await _graphRealTime.ToListAsync()).Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime)).ToList();
+                var result = (await _graphRealTime.ToListAsync()).Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime, item.Data.Length)).ToList();
                 return result == null ? NotFound() : Ok(result);
             }
             else
             {
-                var result = (await _graphRealTime.Where(item => item.Station == station).ToListAsync()).Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime)).ToList();
+                var result = (await _graphRealTime.Where(item => item.Station == station).ToListAsync()).Select(item => new GraphStatus(item.Station, DateTimeOffset.Now - item.SaveTime < TimeSpan.FromSeconds(10), item.Time, item.SaveTime, item.Data.Length)).ToList();
                 return result == null ? NotFound() : Ok(result);
             }
         }
