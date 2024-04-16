@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using Redis.OM.Searching;
+using System.Xml.Linq;
 
 namespace CROP.API.Controllers
 {
@@ -130,11 +131,12 @@ namespace CROP.API.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SystemStatus>> GetSystemStatus()
         {
-            if (!await _systemStatus.AnyAsync())
+            var name = Environment.MachineName;
+            if (!await _systemStatus.AnyAsync(item => item.Id == name))
             {
                 return NotFound();
             }
-            var systemStatus = await _systemStatus.FirstAsync();
+            var systemStatus = await _systemStatus.FirstAsync(item => item.Id == name);
             return systemStatus == null ? NotFound() : Ok(systemStatus);
         }
 
@@ -142,11 +144,12 @@ namespace CROP.API.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SystemReport>> GetSystemReport()
         {
-            if (!await _systemReport.AnyAsync())
+            var name = Environment.MachineName;
+            if (!await _systemReport.AnyAsync(item => item.Id == name))
             {
                 return NotFound();
             }
-            var systemReport = await _systemReport.FirstAsync();
+            var systemReport = await _systemReport.FirstAsync(item => item.Id == name);
             return systemReport == null ? NotFound() : Ok(systemReport);
         }
     }
