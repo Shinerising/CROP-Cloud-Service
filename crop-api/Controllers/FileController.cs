@@ -40,7 +40,6 @@ namespace CROP.API.Controllers
         [Route("upload", Name = "UploadFile")]
         [Authorize]
         [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
-        [DisableRequestSizeLimit]
         public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "createTime")] DateTime createTime, [FromQuery(Name = "updateTime")] DateTime updateTime, [FromQuery(Name = "fileName")] string? fileName, [FromQuery(Name = "fileSize")] int? fileSize)
         {
             if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag))
