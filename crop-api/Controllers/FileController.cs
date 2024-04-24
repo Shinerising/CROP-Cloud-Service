@@ -78,7 +78,7 @@ namespace CROP.API.Controllers
             using FileStream originalFileStream = new(tempFile, FileMode.Open);
             using FileStream decompressedFileStream = FileSystem.Create(targetFile);
             using GZipStream decompressionStream = new(originalFileStream, CompressionMode.Decompress);
-            decompressionStream.CopyTo(decompressedFileStream);
+            await decompressionStream.CopyToAsync(decompressedFileStream);
             FileSystem.Delete(tempFile);
 
             FileSystem.SetCreationTimeUtc(targetFile, createTime);
@@ -445,9 +445,9 @@ namespace CROP.API.Controllers
                 using FileStream originalFileStream = new(targetFile, FileMode.Open);
                 using FileStream compressedFileStream = FileSystem.Create(tempFile);
                 using GZipStream compressionStream = new(compressedFileStream, CompressionMode.Compress);
-                originalFileStream.CopyTo(compressionStream);
-                FileStream fs = new(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
+                await originalFileStream.CopyToAsync(compressionStream);
 
+                FileStream fs = new(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
                 return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
             }
             else
