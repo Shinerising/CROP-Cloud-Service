@@ -196,13 +196,9 @@ namespace CROP.API.Controllers
         [HttpGet]
         [Route("get", Name = "GetFile")]
         [Authorize]
-        public async Task<ActionResult<FileRecord>> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string? filename)
+        public async Task<ActionResult<FileRecord>> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "tag")] string? tag, [FromQuery(Name = "filename")] string? filename)
         {
-            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
-            {
-                return BadRequest();
-            }
-            tag = tag.ToLower();
+            tag = tag?.ToLower();
 
             var result = await (id == null ? context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename) : context.FileRecords.FirstAsync(item => item.Id == id));
             if (result == null)
