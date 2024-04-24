@@ -49,11 +49,11 @@ namespace CROP.API.Services
                         dbContext.Stations.Update(station);
                     }
 
-                    if (!dbContext.TagRecords.Any(tag => tag.Station == station.Id && tag.Name == "Alarm")) {
-                        dbContext.TagRecords.Add(new TagRecord { Station = station.Id, Name = "Alarm" });
+                    if (!dbContext.TagRecords.Any(tag => tag.Station == station.Id && tag.Name == "alarm")) {
+                        dbContext.TagRecords.Add(new TagRecord { Station = station.Id, Name = "alarm" });
                     }
-                    if (!dbContext.TagRecords.Any(tag => tag.Station == station.Id && tag.Name == "Record")) {
-                        dbContext.TagRecords.Add(new TagRecord { Station = station.Id, Name = "Record" });
+                    if (!dbContext.TagRecords.Any(tag => tag.Station == station.Id && tag.Name == "record")) {
+                        dbContext.TagRecords.Add(new TagRecord { Station = station.Id, Name = "record" });
                     }
                 }
             }

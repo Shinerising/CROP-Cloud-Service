@@ -1,16 +1,13 @@
 using CROP.API.Data;
 using CROP.API.Models;
+using CROP.API.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IO.Compression;
-using System.IO;
 using System.Security.Claims;
-using FileSystem = System.IO.File;
-using CROP.API.Utility;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
-using StackExchange.Redis;
 using System.Text;
+using FileSystem = System.IO.File;
 
 namespace CROP.API.Controllers
 {
@@ -45,6 +42,12 @@ namespace CROP.API.Controllers
         [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
         public async Task<ActionResult> UploadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "createTime")] DateTime createTime, [FromQuery(Name = "updateTime")] DateTime updateTime, [FromQuery(Name = "fileName")] string? fileName, [FromQuery(Name = "fileSize")] int? fileSize)
         {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag))
+            {
+                return BadRequest();
+            }
+            tag = tag.ToLower();
+
             if (Request.Form.Files == null || Request.Form.Files.Count == 0)
             {
                 return BadRequest();
@@ -127,6 +130,7 @@ namespace CROP.API.Controllers
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             var path = Path.Combine(_root, station, tag, filename);
 
@@ -165,6 +169,7 @@ namespace CROP.API.Controllers
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             var path = Path.Combine(_root, station, tag, filename);
 
@@ -193,6 +198,12 @@ namespace CROP.API.Controllers
         [Authorize]
         public async Task<ActionResult<FileRecord>> GetFile([FromQuery(Name = "id")] int? id, [FromQuery(Name = "station")] string? station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string? filename)
         {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+            tag = tag.ToLower();
+
             var result = await (id == null ? context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename) : context.FileRecords.FirstAsync(item => item.Id == id));
             if (result == null)
             {
@@ -225,6 +236,7 @@ namespace CROP.API.Controllers
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             var startTime = DateTimeOffset.FromUnixTimeSeconds(start);
             var endTime = DateTimeOffset.FromUnixTimeSeconds(end);
@@ -260,10 +272,11 @@ namespace CROP.API.Controllers
         [Authorize]
         public async Task<ActionResult<List<FileRecord>>> GetFileList([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag)
         {
-            if (string.IsNullOrEmpty(station))
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag))
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             if (!await context.TagRecords.AnyAsync(item => item.Station == station && item.Name == tag))
             {
@@ -303,10 +316,11 @@ namespace CROP.API.Controllers
         [Authorize]
         public async Task<ActionResult<List<FileRecord>>> GetFileListFilter([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "start")] DateTimeOffset startTime, [FromQuery(Name = "end")] DateTimeOffset endTime)
         {
-            if (string.IsNullOrEmpty(station))
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag))
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             if (!await context.TagRecords.AnyAsync(item => item.Station == station && item.Name == tag))
             {
@@ -362,6 +376,7 @@ namespace CROP.API.Controllers
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             var path = Path.Combine(_root, station, tag, filename);
             var result = await context.ShiftDatas.FirstOrDefaultAsync(item => item.FileName == path);
@@ -383,6 +398,7 @@ namespace CROP.API.Controllers
             {
                 return BadRequest();
             }
+            tag = tag.ToLower();
 
             var targetFile = Path.Combine(_root, station, tag, filename);
 
@@ -409,6 +425,12 @@ namespace CROP.API.Controllers
         [Authorize]
         public async Task<ActionResult> DownloadFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+            tag = tag.ToLower();
+
             var result = await context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename);
             if (result == null)
             {
@@ -447,6 +469,12 @@ namespace CROP.API.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteFile([FromQuery(Name = "station")] string station, [FromQuery(Name = "tag")] string tag, [FromQuery(Name = "filename")] string filename)
         {
+            if (string.IsNullOrEmpty(station) || string.IsNullOrEmpty(tag) || string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+            tag = tag.ToLower();
+
             var result = await context.FileRecords.FirstAsync(item => item.Station == station && item.Tag == tag && item.FileName == filename);
             if (result == null)
             {
