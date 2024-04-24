@@ -75,11 +75,13 @@ namespace CROP.API.Controllers
             var targetFile = Path.Combine(_root, station, tag, fileName);
             Directory.CreateDirectory(Path.Combine(_root, station, tag));
 
-            using FileStream originalFileStream = new(tempFile, FileMode.Open);
-            using FileStream decompressedFileStream = FileSystem.Create(targetFile);
-            using GZipStream decompressionStream = new(originalFileStream, CompressionMode.Decompress);
-            await decompressionStream.CopyToAsync(decompressedFileStream);
-            FileSystem.Delete(tempFile);
+            {
+                using FileStream originalFileStream = new(tempFile, FileMode.Open);
+                using FileStream decompressedFileStream = FileSystem.Create(targetFile);
+                using GZipStream decompressionStream = new(originalFileStream, CompressionMode.Decompress);
+                await decompressionStream.CopyToAsync(decompressedFileStream);
+                FileSystem.Delete(tempFile);
+            }
 
             FileSystem.SetCreationTimeUtc(targetFile, createTime);
             FileSystem.SetLastWriteTimeUtc(targetFile, updateTime);
@@ -438,10 +440,13 @@ namespace CROP.API.Controllers
             if (FileSystem.Exists(targetFile))
             {
                 var tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-                using FileStream originalFileStream = new(targetFile, FileMode.Open);
-                using FileStream compressedFileStream = FileSystem.Create(tempFile);
-                using GZipStream compressionStream = new(compressedFileStream, CompressionMode.Compress);
-                await originalFileStream.CopyToAsync(compressionStream);
+
+                {
+                    using FileStream originalFileStream = new(targetFile, FileMode.Open);
+                    using FileStream compressedFileStream = FileSystem.Create(tempFile);
+                    using GZipStream compressionStream = new(compressedFileStream, CompressionMode.Compress);
+                    await originalFileStream.CopyToAsync(compressionStream);
+                }
 
                 FileStream fs = new(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 4096, FileOptions.DeleteOnClose);
                 return File(fs, "application/octet-stream", Path.GetFileName(targetFile));
