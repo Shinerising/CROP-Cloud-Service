@@ -110,7 +110,7 @@ namespace CROP.API.Controllers
             var startTime = DateTimeOffset.FromUnixTimeSeconds(start);
             var endTime = DateTimeOffset.FromUnixTimeSeconds(end);
             var data = context.ShiftDatas.Where(item => (station == null || item.StationId == station) && item.ShiftTime >= startTime && item.ShiftTime <= endTime);
-            var list = await data.Select(item => new ShiftSum(null, item.ShiftTime, item.ShiftTime, item.PlanCount, item.CutCount, item.CarCount, item.WeightSum)).ToListAsync();
+            var list = await data.Select(item => new ShiftSum(item.StationId, item.ShiftTime, item.ShiftTime, item.PlanCount, item.CutCount, item.CarCount, item.WeightSum)).ToListAsync();
             var result = new ShiftDist(station, startTime, endTime, list);
             return Ok(result);
         }
